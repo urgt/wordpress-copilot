@@ -144,16 +144,16 @@ class WPC_Settings {
 
     public static function ajax_flush_schema(): void {
         check_ajax_referer( 'wpc_admin_nonce', 'nonce' );
-        if ( ! current_user_can( 'manage_options' ) ) wp_die( 'Forbidden', 403 );
+        if ( ! current_user_can( 'manage_options' ) ) wp_die( esc_html__( 'Forbidden', 'wordpress-copilot' ), 403 );
         WPC_DB_Schema::flush_cache();
-        wp_send_json_success( [ 'message' => 'Schema cache cleared.' ] );
+        wp_send_json_success( [ 'message' => __( 'Schema cache cleared.', 'wordpress-copilot' ) ] );
     }
 
     /* ── Settings Page ──────────────────────────────────────────── */
     public static function add_settings_page(): void {
         add_options_page(
-            'WordPress Copilot',
-            'WP Copilot',
+            __( 'WordPress Copilot', 'wordpress-copilot' ),
+            __( 'WP Copilot', 'wordpress-copilot' ),
             'manage_options',
             'wordpress-copilot',
             [ __CLASS__, 'render_settings_page' ]
@@ -265,11 +265,11 @@ class WPC_Settings {
 
         <!-- Tabs -->
         <div class="wpc-tabs">
-            <button class="wpc-tab-btn active" data-tab="provider">🤖 AI Provider</button>
-            <button class="wpc-tab-btn" data-tab="privacy">🔒 Privacy</button>
-            <button class="wpc-tab-btn" data-tab="performance">⚡ Performance</button>
-            <button class="wpc-tab-btn" data-tab="access">👥 Access</button>
-            <button class="wpc-tab-btn" data-tab="advanced">⚙️ Advanced</button>
+            <button class="wpc-tab-btn active" data-tab="provider"><?php esc_html_e( '🤖 AI Provider', 'wordpress-copilot' ); ?></button>
+            <button class="wpc-tab-btn" data-tab="privacy"><?php esc_html_e( '🔒 Privacy', 'wordpress-copilot' ); ?></button>
+            <button class="wpc-tab-btn" data-tab="performance"><?php esc_html_e( '⚡ Performance', 'wordpress-copilot' ); ?></button>
+            <button class="wpc-tab-btn" data-tab="access"><?php esc_html_e( '👥 Access', 'wordpress-copilot' ); ?></button>
+            <button class="wpc-tab-btn" data-tab="advanced"><?php esc_html_e( '⚙️ Advanced', 'wordpress-copilot' ); ?></button>
         </div>
 
         <form method="post" action="options.php" id="wpc-settings-form">
@@ -279,7 +279,7 @@ class WPC_Settings {
             <div class="wpc-tab-panel active" data-panel="provider">
 
                 <div class="wpc-card">
-                    <h3>Provider</h3>
+                    <h3><?php esc_html_e( 'Provider', 'wordpress-copilot' ); ?></h3>
                     <?php foreach ( $providers as $key => $info ) :
                         $icons = [ 'anthropic' => '🟤', 'openai' => '🟢', 'google' => '🔵' ];
                     ?>
@@ -292,9 +292,9 @@ class WPC_Settings {
                             <div class="prov-name"><?php echo esc_html( $icons[$key] ?? '⚫' ); ?> <?php echo esc_html($info['label']); ?></div>
                             <div class="prov-desc"><?php
                                 $descs = [
-                                    'anthropic' => 'Claude models — great for nuanced analysis and long contexts',
-                                    'openai'    => 'GPT models — fast, reliable, excellent at structured output',
-                                    'google'    => 'Gemini models — cost-effective, strong multilingual support',
+                                    'anthropic' => __( 'Claude models — great for nuanced analysis and long contexts', 'wordpress-copilot' ),
+                                    'openai'    => __( 'GPT models — fast, reliable, excellent at structured output', 'wordpress-copilot' ),
+                                    'google'    => __( 'Gemini models — cost-effective, strong multilingual support', 'wordpress-copilot' ),
                                 ];
                                 echo esc_html( $descs[$key] ?? '' );
                             ?></div>
@@ -304,12 +304,12 @@ class WPC_Settings {
                 </div>
 
                 <div class="wpc-card">
-                    <h3>Model</h3>
+                    <h3><?php esc_html_e( 'Model', 'wordpress-copilot' ); ?></h3>
                     <?php foreach ( $providers as $key => $info ) : ?>
                     <div class="wpc-model-group" data-provider="<?php echo esc_attr($key); ?>"
                          style="display:<?php echo $cur_prov === $key ? 'block' : 'none'; ?>">
                         <div class="wpc-field">
-                            <label>Active model</label>
+                            <label><?php esc_html_e( 'Active model', 'wordpress-copilot' ); ?></label>
                             <div>
                                 <select name="<?php echo esc_attr( self::OPTION_KEY ); ?>[model]">
                                     <?php foreach ( $info['models'] as $mid => $mname ) : ?>
@@ -319,7 +319,7 @@ class WPC_Settings {
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <p class="wpc-desc">Default model for the chat. Can be overridden per-session in the chat UI.</p>
+                                <p class="wpc-desc"><?php esc_html_e( 'Default model for the chat. Can be overridden per-session in the chat UI.', 'wordpress-copilot' ); ?></p>
                             </div>
                         </div>
                     </div>
@@ -327,9 +327,9 @@ class WPC_Settings {
                 </div>
 
                 <div class="wpc-card">
-                    <h3>API Key</h3>
+                    <h3><?php esc_html_e( 'API Key', 'wordpress-copilot' ); ?></h3>
                     <div class="wpc-field">
-                        <label>Secret key</label>
+                        <label><?php esc_html_e( 'Secret key', 'wordpress-copilot' ); ?></label>
                         <div>
                             <input type="password"
                                    name="<?php echo esc_attr( self::OPTION_KEY ); ?>[api_key]"
@@ -340,73 +340,70 @@ class WPC_Settings {
                     </div>
                 </div>
 
-                <?php submit_button( 'Save Settings' ); ?>
+                <?php submit_button( __( 'Save Settings', 'wordpress-copilot' ) ); ?>
             </div>
 
             <!-- ── Tab: Privacy ─────────────────────────────────── -->
             <div class="wpc-tab-panel" data-panel="privacy">
 
                 <div class="wpc-card">
-                    <h3>Data Sharing</h3>
+                    <h3><?php esc_html_e( 'Data Sharing', 'wordpress-copilot' ); ?></h3>
                     <div class="wpc-privacy-note">
-                        <strong>Sent on every request:</strong> database structure (table names, column names, types),
-                        your question in natural language, and the generated SQL query.<br>
-                        <strong>Sent for analysis:</strong> query result rows are forwarded to the AI provider so it can
-                        summarize the answer. Without protection enabled, this may include personal data
-                        (emails, names, addresses, phone numbers).
+                        <strong><?php esc_html_e( 'Sent on every request:', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'database structure (table names, column names, types), your question in natural language, and the generated SQL query.', 'wordpress-copilot' ); ?><br>
+                        <strong><?php esc_html_e( 'Sent for analysis:', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'query result rows are forwarded to the AI provider so it can summarize the answer. Without protection enabled, this may include personal data (emails, names, addresses, phone numbers).', 'wordpress-copilot' ); ?>
                     </div>
                 </div>
 
                 <div class="wpc-card">
-                    <h3>Protection Level</h3>
+                    <h3><?php esc_html_e( 'Protection Level', 'wordpress-copilot' ); ?></h3>
                     <div class="wpc-radio-group">
                         <label class="wpc-radio-opt">
                             <input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"
                                    value="off" <?php checked( $anon_level, 'off' ); ?>>
                             <div class="opt-body">
-                                <div class="opt-title">Disabled</div>
-                                <div class="opt-desc">No data masking. All column values including personal data are visible in results and sent to the AI provider for analysis.</div>
+                                <div class="opt-title"><?php esc_html_e( 'Disabled', 'wordpress-copilot' ); ?></div>
+                                <div class="opt-desc"><?php esc_html_e( 'No data masking. All column values including personal data are visible in results and sent to the AI provider for analysis.', 'wordpress-copilot' ); ?></div>
                             </div>
                         </label>
                         <label class="wpc-radio-opt">
                             <input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"
                                    value="results" <?php checked( $anon_level, 'results' ); ?>>
                             <div class="opt-body">
-                                <div class="opt-title">Mask query results</div>
-                                <div class="opt-desc">Protected column values are replaced with <code>[REDACTED]</code> in query results and in data sent to AI for analysis. The database schema (table and column names) is still fully visible to the AI.</div>
+                                <div class="opt-title"><?php esc_html_e( 'Mask query results', 'wordpress-copilot' ); ?></div>
+                                <div class="opt-desc"><?php echo wp_kses( __( 'Protected column values are replaced with <code>[REDACTED]</code> in query results and in data sent to AI for analysis. The database schema (table and column names) is still fully visible to the AI.', 'wordpress-copilot' ), [ 'code' => [] ] ); ?></div>
                             </div>
                         </label>
                         <label class="wpc-radio-opt">
                             <input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"
                                    value="full" <?php checked( $anon_level, 'full' ); ?>>
                             <div class="opt-body">
-                                <div class="opt-title">Full protection</div>
-                                <div class="opt-desc">Values are masked in results, and protected column names are completely removed from the schema sent to AI. The AI cannot reference or query these columns at all.</div>
-                                <span class="wpc-opt-badge success">Recommended for production</span>
+                                <div class="opt-title"><?php esc_html_e( 'Full protection', 'wordpress-copilot' ); ?></div>
+                                <div class="opt-desc"><?php esc_html_e( 'Values are masked in results, and protected column names are completely removed from the schema sent to AI. The AI cannot reference or query these columns at all.', 'wordpress-copilot' ); ?></div>
+                                <span class="wpc-opt-badge success"><?php esc_html_e( 'Recommended for production', 'wordpress-copilot' ); ?></span>
                             </div>
                         </label>
                     </div>
                 </div>
 
                 <div class="wpc-card" id="wpc-anon-cols-card" style="<?php echo $anon_level === 'off' ? 'opacity:.45;pointer-events:none' : ''; ?>">
-                    <h3>Protected Columns</h3>
+                    <h3><?php esc_html_e( 'Protected Columns', 'wordpress-copilot' ); ?></h3>
                     <div class="wpc-field">
-                        <label>Column names</label>
+                        <label><?php esc_html_e( 'Column names', 'wordpress-copilot' ); ?></label>
                         <div>
                             <textarea name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_columns]"
                                       rows="8"><?php echo esc_textarea( $opts['anonymize_columns'] ?? self::default_anon_columns() ); ?></textarea>
-                            <p class="wpc-desc">One column name per line. Case-insensitive exact match. Values in matching columns are replaced with <code>[REDACTED]</code>.</p>
+                            <p class="wpc-desc"><?php echo wp_kses( __( 'One column name per line. Case-insensitive exact match. Values in matching columns are replaced with <code>[REDACTED]</code>.', 'wordpress-copilot' ), [ 'code' => [] ] ); ?></p>
                         </div>
                     </div>
                     <div class="wpc-preset-bar">
-                        <span class="p-label">Quick presets:</span>
-                        <button type="button" class="wpc-inline-btn" data-preset="gdpr">GDPR basics</button>
-                        <button type="button" class="wpc-inline-btn" data-preset="woo">WooCommerce billing</button>
-                        <button type="button" class="wpc-inline-btn" data-preset="users">WP user fields</button>
+                        <span class="p-label"><?php esc_html_e( 'Quick presets:', 'wordpress-copilot' ); ?></span>
+                        <button type="button" class="wpc-inline-btn" data-preset="gdpr"><?php esc_html_e( 'GDPR basics', 'wordpress-copilot' ); ?></button>
+                        <button type="button" class="wpc-inline-btn" data-preset="woo"><?php esc_html_e( 'WooCommerce billing', 'wordpress-copilot' ); ?></button>
+                        <button type="button" class="wpc-inline-btn" data-preset="users"><?php esc_html_e( 'WP user fields', 'wordpress-copilot' ); ?></button>
                     </div>
                 </div>
 
-                <?php submit_button( 'Save Settings' ); ?>
+                <?php submit_button( __( 'Save Settings', 'wordpress-copilot' ) ); ?>
             </div>
 
             <!-- ── Tab: Performance ─────────────────────────────── -->
@@ -424,75 +421,89 @@ class WPC_Settings {
                 <div class="wpc-db-bar">
                     <div class="bar-item">
                         <span class="bar-val <?php echo $table_count > 60 ? 'yellow' : ''; ?>"><?php echo absint( $table_count ); ?></span>
-                        <span class="bar-lbl">Tables</span>
+                        <span class="bar-lbl"><?php esc_html_e( 'Tables', 'wordpress-copilot' ); ?></span>
                     </div>
                     <div class="bar-item">
                         <span class="bar-val"><?php echo number_format( $db_size_mb, 1 ); ?> MB</span>
-                        <span class="bar-lbl">DB size</span>
+                        <span class="bar-lbl"><?php esc_html_e( 'DB size', 'wordpress-copilot' ); ?></span>
                     </div>
                     <div class="bar-item">
                         <span class="bar-val <?php echo esc_attr( $exp_color ); ?>">
-                            <?php echo $cache['cached'] ? absint( $exp_min ) . ' min' : 'Not cached'; ?>
+                            <?php echo $cache['cached'] ? absint( $exp_min ) . ' ' . esc_html__( 'min', 'wordpress-copilot' ) : esc_html__( 'Not cached', 'wordpress-copilot' ); ?>
                         </span>
-                        <span class="bar-lbl">Cache TTL</span>
+                        <span class="bar-lbl"><?php esc_html_e( 'Cache TTL', 'wordpress-copilot' ); ?></span>
                     </div>
                     <div class="bar-item">
                         <span class="bar-val <?php echo esc_attr( $tok_color ); ?>">
                             <?php echo $cache['cached'] ? '~' . number_format( $cache['tokens'] ) : '—'; ?>
                         </span>
-                        <span class="bar-lbl">Schema tokens</span>
+                        <span class="bar-lbl"><?php esc_html_e( 'Schema tokens', 'wordpress-copilot' ); ?></span>
                     </div>
                 </div>
 
                 <!-- Schema Cache -->
                 <div class="wpc-card">
-                    <h3>Schema Cache</h3>
+                    <h3><?php esc_html_e( 'Schema Cache', 'wordpress-copilot' ); ?></h3>
                     <?php if ( $cache['tokens'] > 4000 ) : ?>
                     <div class="wpc-token-note">
-                        Schema uses <strong>~<?php echo number_format( $cache['tokens'] ); ?> tokens</strong> per request.
-                        Exclude unnecessary tables below to reduce cost and improve response quality.
+                        <?php echo wp_kses(
+                        sprintf(
+                            /* translators: %s: number of tokens formatted with thousands separator */
+                            __( 'Schema uses <strong>~%s tokens</strong> per request. Exclude unnecessary tables below to reduce cost and improve response quality.', 'wordpress-copilot' ),
+                            number_format( $cache['tokens'] )
+                        ),
+                        [ 'strong' => [] ]
+                    ); ?>
                     </div>
                     <?php endif; ?>
                     <div class="wpc-field">
-                        <label>Cache duration</label>
+                        <label><?php esc_html_e( 'Cache duration', 'wordpress-copilot' ); ?></label>
                         <div>
                             <select name="<?php echo esc_attr( self::OPTION_KEY ); ?>[schema_cache_ttl]">
-                                <option value="0"     <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '0'     ); ?>>Disabled</option>
-                                <option value="600"   <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '600'   ); ?>>10 minutes</option>
-                                <option value="3600"  <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '3600'  ); ?>>1 hour (recommended)</option>
-                                <option value="21600" <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '21600' ); ?>>6 hours</option>
-                                <option value="86400" <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '86400' ); ?>>24 hours</option>
+                                <option value="0"     <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '0'     ); ?>><?php esc_html_e( 'Disabled', 'wordpress-copilot' ); ?></option>
+                                <option value="600"   <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '600'   ); ?>><?php esc_html_e( '10 minutes', 'wordpress-copilot' ); ?></option>
+                                <option value="3600"  <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '3600'  ); ?>><?php esc_html_e( '1 hour (recommended)', 'wordpress-copilot' ); ?></option>
+                                <option value="21600" <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '21600' ); ?>><?php esc_html_e( '6 hours', 'wordpress-copilot' ); ?></option>
+                                <option value="86400" <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '86400' ); ?>><?php esc_html_e( '24 hours', 'wordpress-copilot' ); ?></option>
                             </select>
-                            <p class="wpc-desc">How long to keep the schema in cache. Longer = fewer rebuilds, but DB structure changes won't be detected until cache expires.</p>
+                            <p class="wpc-desc"><?php esc_html_e( 'How long to keep the schema in cache. Longer = fewer rebuilds, but DB structure changes won\'t be detected until cache expires.', 'wordpress-copilot' ); ?></p>
                         </div>
                     </div>
                     <div class="wpc-field">
-                        <label>Max tables in schema</label>
+                        <label><?php esc_html_e( 'Max tables in schema', 'wordpress-copilot' ); ?></label>
                         <div>
                             <input type="number" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[max_schema_tables]"
                                    value="<?php echo esc_attr( $opts['max_schema_tables'] ?? 80 ); ?>"
                                    min="5" max="500" class="small-text" />
-                            <p class="wpc-desc">WordPress core tables are always prioritized. Remaining slots filled alphabetically.</p>
+                            <p class="wpc-desc"><?php esc_html_e( 'WordPress core tables are always prioritized. Remaining slots filled alphabetically.', 'wordpress-copilot' ); ?></p>
                         </div>
                     </div>
                     <hr class="wpc-section-divider">
                     <div style="display:flex;align-items:center;gap:10px;">
-                        <button type="button" class="wpc-inline-btn" id="wpc-flush-schema">Flush cache</button>
-                        <span style="font-size:12px;color:#757575;">Force a schema rebuild on next query.</span>
+                        <button type="button" class="wpc-inline-btn" id="wpc-flush-schema"><?php esc_html_e( 'Flush cache', 'wordpress-copilot' ); ?></button>
+                        <span style="font-size:12px;color:#757575;"><?php esc_html_e( 'Force a schema rebuild on next query.', 'wordpress-copilot' ); ?></span>
                     </div>
                 </div>
 
                 <!-- Table Exclusions -->
                 <div class="wpc-card">
-                    <h3>Table Exclusions
+                    <h3><?php esc_html_e( 'Table Exclusions', 'wordpress-copilot' ); ?>
                         <?php if ( $is_large ) : ?>
-                        <span class="wpc-badge warn">Large database</span>
+                        <span class="wpc-badge warn"><?php esc_html_e( 'Large database', 'wordpress-copilot' ); ?></span>
                         <?php endif; ?>
                     </h3>
 
                     <?php if ( ! empty( $recommendations ) ) : ?>
                     <p style="font-size:12px;color:#555;margin:0 0 12px;">
-                        <?php echo count( $recommendations ); ?> plugin table group<?php echo count( $recommendations ) > 1 ? 's' : ''; ?> detected that can be excluded to reduce schema size:
+                        <?php
+                        /* translators: %d: number of plugin table groups detected */
+                        printf( esc_html( _n(
+                            '%d plugin table group detected that can be excluded to reduce schema size:',
+                            '%d plugin table groups detected that can be excluded to reduce schema size:',
+                            count( $recommendations ),
+                            'wordpress-copilot'
+                        ) ), count( $recommendations ) );
+                        ?>
                     </p>
                     <div class="wpc-rec-list" id="wpc-rec-list">
                         <?php foreach ( $recommendations as $rec ) : ?>
@@ -502,61 +513,64 @@ class WPC_Settings {
                                 <span><?php echo esc_html( $rec['desc'] ); ?></span>
                             </div>
                             <code class="wpc-rec-pattern"><?php echo esc_html( $rec['pattern'] ); ?></code>
-                            <span class="wpc-rec-count"><?php echo absint( $rec['count'] ); ?> table<?php echo $rec['count'] !== 1 ? 's' : ''; ?></span>
-                            <button type="button" class="wpc-inline-btn wpc-add-rec">Exclude</button>
+                            <span class="wpc-rec-count"><?php
+                                /* translators: %d: number of tables matched */
+                                echo esc_html( sprintf( _n( '%d table', '%d tables', $rec['count'], 'wordpress-copilot' ), $rec['count'] ) );
+                            ?></span>
+                            <button type="button" class="wpc-inline-btn wpc-add-rec"><?php esc_html_e( 'Exclude', 'wordpress-copilot' ); ?></button>
                         </div>
                         <?php endforeach; ?>
                     </div>
                     <div style="margin-bottom:16px;">
-                        <button type="button" class="wpc-inline-btn" id="wpc-add-all-recs">Exclude all detected</button>
+                        <button type="button" class="wpc-inline-btn" id="wpc-add-all-recs"><?php esc_html_e( 'Exclude all detected', 'wordpress-copilot' ); ?></button>
                     </div>
                     <hr class="wpc-section-divider">
                     <?php else : ?>
-                    <p style="font-size:12px;color:#166534;margin:0 0 14px;">No unnecessary plugin tables detected — your schema is clean.</p>
+                    <p style="font-size:12px;color:#166534;margin:0 0 14px;"><?php esc_html_e( 'No unnecessary plugin tables detected — your schema is clean.', 'wordpress-copilot' ); ?></p>
                     <?php endif; ?>
 
                     <div class="wpc-field">
-                        <label>Exclusion patterns</label>
+                        <label><?php esc_html_e( 'Exclusion patterns', 'wordpress-copilot' ); ?></label>
                         <div>
                             <textarea name="<?php echo esc_attr( self::OPTION_KEY ); ?>[excluded_tables]"
                                       rows="6" id="wpc-excluded-tables"><?php echo esc_textarea( $opts['excluded_tables'] ?? '' ); ?></textarea>
-                            <p class="wpc-desc">One pattern per line. Use <code>*</code> as wildcard (e.g. <code>wp_yoast_*</code>). Matched tables are completely hidden from AI.</p>
+                            <p class="wpc-desc"><?php echo wp_kses( __( 'One pattern per line. Use <code>*</code> as wildcard (e.g. <code>wp_yoast_*</code>). Matched tables are completely hidden from AI.', 'wordpress-copilot' ), [ 'code' => [] ] ); ?></p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Query Limits -->
                 <div class="wpc-card">
-                    <h3>Query Limits</h3>
+                    <h3><?php esc_html_e( 'Query Limits', 'wordpress-copilot' ); ?></h3>
                     <div class="wpc-field">
-                        <label>Execution timeout</label>
+                        <label><?php esc_html_e( 'Execution timeout', 'wordpress-copilot' ); ?></label>
                         <div>
                             <input type="number" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[query_timeout]"
                                    value="<?php echo esc_attr( $opts['query_timeout'] ?? 15 ); ?>"
-                                   min="0" max="120" class="small-text" /> seconds
-                            <p class="wpc-desc">MySQL <code>MAX_EXECUTION_TIME</code> per query. Set to 0 for server default.</p>
+                                   min="0" max="120" class="small-text" /> <?php esc_html_e( 'seconds', 'wordpress-copilot' ); ?>
+                            <p class="wpc-desc"><?php echo wp_kses( __( 'MySQL <code>MAX_EXECUTION_TIME</code> per query. Set to 0 for server default.', 'wordpress-copilot' ), [ 'code' => [] ] ); ?></p>
                         </div>
                     </div>
                     <div class="wpc-field">
-                        <label>Maximum result rows</label>
+                        <label><?php esc_html_e( 'Maximum result rows', 'wordpress-copilot' ); ?></label>
                         <div>
                             <input type="number" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[max_rows]"
                                    value="<?php echo esc_attr( $opts['max_rows'] ?? 100 ); ?>"
-                                   min="1" max="5000" class="small-text" /> rows
-                            <p class="wpc-desc">AI is instructed to add <code>LIMIT</code> to all queries. Hard safety cap: 1–5000.</p>
+                                   min="1" max="5000" class="small-text" /> <?php esc_html_e( 'rows', 'wordpress-copilot' ); ?>
+                            <p class="wpc-desc"><?php echo wp_kses( __( 'AI is instructed to add <code>LIMIT</code> to all queries. Hard safety cap: 1–5000.', 'wordpress-copilot' ), [ 'code' => [] ] ); ?></p>
                         </div>
                     </div>
                 </div>
 
-                <?php submit_button( 'Save Settings' ); ?>
+                <?php submit_button( __( 'Save Settings', 'wordpress-copilot' ) ); ?>
             </div>
 
             <!-- ── Tab: Access ───────────────────────────────────── -->
             <div class="wpc-tab-panel" data-panel="access">
 
                 <div class="wpc-card">
-                    <h3>Allowed Roles</h3>
-                    <p style="font-size:13px;color:#555;margin:0 0 16px;">Only users with these roles can access the Copilot chat widget in the admin.</p>
+                    <h3><?php esc_html_e( 'Allowed Roles', 'wordpress-copilot' ); ?></h3>
+                    <p style="font-size:13px;color:#555;margin:0 0 16px;"><?php esc_html_e( 'Only users with these roles can access the Copilot chat widget in the admin.', 'wordpress-copilot' ); ?></p>
                     <div class="wpc-roles-grid">
                         <?php foreach ( $roles as $role_key => $role_data ) : ?>
                         <label class="wpc-role-item">
@@ -570,65 +584,65 @@ class WPC_Settings {
                     </div>
                 </div>
 
-                <?php submit_button( 'Save Settings' ); ?>
+                <?php submit_button( __( 'Save Settings', 'wordpress-copilot' ) ); ?>
             </div>
 
             <!-- ── Tab: Advanced ─────────────────────────────────── -->
             <div class="wpc-tab-panel" data-panel="advanced">
 
                 <div class="wpc-card">
-                    <h3>Response</h3>
+                    <h3><?php esc_html_e( 'Response', 'wordpress-copilot' ); ?></h3>
                     <div class="wpc-toggle-row">
                         <input type="checkbox" id="opt_streaming" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[streaming]" value="1"
                                <?php checked( ! empty( $opts['streaming'] ) ); ?>>
                         <div>
-                            <label for="opt_streaming">⚡ Enable streaming</label>
-                            <p class="wpc-desc">Real-time token-by-token response. Disable if your server doesn't support long-running requests.</p>
+                            <label for="opt_streaming"><?php esc_html_e( '⚡ Enable streaming', 'wordpress-copilot' ); ?></label>
+                            <p class="wpc-desc"><?php esc_html_e( 'Real-time token-by-token response. Disable if your server doesn\'t support long-running requests.', 'wordpress-copilot' ); ?></p>
                         </div>
                     </div>
                     <div class="wpc-toggle-row">
                         <input type="checkbox" id="opt_show_sql" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[show_sql]" value="1"
                                <?php checked( ! empty( $opts['show_sql'] ) ); ?>>
                         <div>
-                            <label for="opt_show_sql">🔍 Show generated SQL</label>
-                            <p class="wpc-desc">Displays the SQL query generated by AI. Useful for transparency and debugging.</p>
+                            <label for="opt_show_sql"><?php esc_html_e( '🔍 Show generated SQL', 'wordpress-copilot' ); ?></label>
+                            <p class="wpc-desc"><?php esc_html_e( 'Displays the SQL query generated by AI. Useful for transparency and debugging.', 'wordpress-copilot' ); ?></p>
                         </div>
                     </div>
                 </div>
 
                 <div class="wpc-card">
-                    <h3>Input</h3>
+                    <h3><?php esc_html_e( 'Input', 'wordpress-copilot' ); ?></h3>
                     <div class="wpc-toggle-row">
                         <input type="checkbox" id="opt_voice" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[enable_voice]" value="1"
                                <?php checked( ! empty( $opts['enable_voice'] ) ); ?>>
                         <div>
-                            <label for="opt_voice">🎙️ Enable voice input</label>
-                            <p class="wpc-desc">Web Speech API — Chrome/Edge only. Allows dictating questions.</p>
+                            <label for="opt_voice"><?php esc_html_e( '🎙️ Enable voice input', 'wordpress-copilot' ); ?></label>
+                            <p class="wpc-desc"><?php esc_html_e( 'Web Speech API — Chrome/Edge only. Allows dictating questions.', 'wordpress-copilot' ); ?></p>
                         </div>
                     </div>
                 </div>
 
                 <div class="wpc-card">
-                    <h3>Logging & Debug</h3>
+                    <h3><?php esc_html_e( 'Logging & Debug', 'wordpress-copilot' ); ?></h3>
                     <div class="wpc-toggle-row">
                         <input type="checkbox" id="opt_log" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[log_queries]" value="1"
                                <?php checked( ! empty( $opts['log_queries'] ) ); ?>>
                         <div>
-                            <label for="opt_log">📋 Log queries to database</label>
-                            <p class="wpc-desc">Stores every query, generated SQL, token usage and status in the <code>wp_copilot_logs</code> table.</p>
+                            <label for="opt_log"><?php esc_html_e( '📋 Log queries to database', 'wordpress-copilot' ); ?></label>
+                            <p class="wpc-desc"><?php echo wp_kses( __( 'Stores every query, generated SQL, token usage and status in the <code>wp_copilot_logs</code> table.', 'wordpress-copilot' ), [ 'code' => [] ] ); ?></p>
                         </div>
                     </div>
                     <div class="wpc-toggle-row">
                         <input type="checkbox" id="opt_debug" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[debug_mode]" value="1"
                                <?php checked( ! empty( $opts['debug_mode'] ) ); ?>>
                         <div>
-                            <label for="opt_debug">🐛 Debug mode</label>
-                            <p class="wpc-desc">Verbose logging to PHP error log. Disable in production.</p>
+                            <label for="opt_debug"><?php esc_html_e( '🐛 Debug mode', 'wordpress-copilot' ); ?></label>
+                            <p class="wpc-desc"><?php esc_html_e( 'Verbose logging to PHP error log. Disable in production.', 'wordpress-copilot' ); ?></p>
                         </div>
                     </div>
                 </div>
 
-                <?php submit_button( 'Save Settings' ); ?>
+                <?php submit_button( __( 'Save Settings', 'wordpress-copilot' ) ); ?>
             </div>
 
         </form>
@@ -738,11 +752,11 @@ class WPC_Settings {
         if ( empty( $logs ) ) return;
         ?>
         <div class="wpc-card" style="margin-top:24px;">
-            <h3 style="margin:0 0 16px;">📋 Query Log <span style="font-size:12px;color:#999;font-weight:400">(last 50)</span></h3>
+            <h3 style="margin:0 0 16px;"><?php esc_html_e( '📋 Query Log', 'wordpress-copilot' ); ?> <span style="font-size:12px;color:#999;font-weight:400"><?php esc_html_e( '(last 50)', 'wordpress-copilot' ); ?></span></h3>
             <table class="widefat striped" style="font-size:12px;">
                 <thead>
-                    <tr><th>#</th><th>User</th><th>Question</th><th>SQL</th><th>Provider</th>
-                    <th>Tokens</th><th>Rows</th><th>ms</th><th>Status</th><th>Date</th></tr>
+                    <tr><th>#</th><th><?php esc_html_e( 'User', 'wordpress-copilot' ); ?></th><th><?php esc_html_e( 'Question', 'wordpress-copilot' ); ?></th><th>SQL</th><th><?php esc_html_e( 'Provider', 'wordpress-copilot' ); ?></th>
+                    <th><?php esc_html_e( 'Tokens', 'wordpress-copilot' ); ?></th><th><?php esc_html_e( 'Rows', 'wordpress-copilot' ); ?></th><th>ms</th><th><?php esc_html_e( 'Status', 'wordpress-copilot' ); ?></th><th><?php esc_html_e( 'Date', 'wordpress-copilot' ); ?></th></tr>
                 </thead>
                 <tbody>
                 <?php foreach ( $logs as $log ) : ?>

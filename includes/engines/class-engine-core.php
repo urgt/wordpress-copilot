@@ -130,8 +130,11 @@ abstract class WPC_Engine_Core {
 
         if ( $code !== 200 ) {
             $msg = $body['error']['message']
-                ?? $body['error']['errors'][0]['message']
-                ?? 'API error (HTTP ' . $code . ')';
+                ?? $body['error']['errors'][0]['message'];
+            if ( $msg === null ) {
+                /* translators: %d: HTTP status code */
+                $msg = sprintf( __( 'API error (HTTP %d)', 'wordpress-copilot' ), $code );
+            }
             return new WP_Error( 'api_error', $msg );
         }
 
@@ -215,7 +218,7 @@ PROMPT;
 
         if ( ! is_array( $parsed ) || ! isset( $parsed['sql'] ) ) {
             WPC_Logger::error( 'AI did not return valid JSON. Raw: ' . mb_strimwidth( $text, 0, 300 ) );
-            return new WP_Error( 'parse_error', 'AI response could not be parsed. Raw: ' . mb_strimwidth( $text, 0, 200 ) );
+            return new WP_Error( 'parse_error', __( 'AI response could not be parsed.', 'wordpress-copilot' ) . ' Raw: ' . mb_strimwidth( $text, 0, 200 ) );
         }
 
         return $parsed;

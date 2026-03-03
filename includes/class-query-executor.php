@@ -18,14 +18,15 @@ class WPC_Query_Executor {
         $trimmed = ltrim( $sql );
 
         if ( ! preg_match( '/^SELECT\s/i', $trimmed ) ) {
-            return new WP_Error( 'unsafe_query', 'Only SELECT queries are allowed.' );
+            return new WP_Error( 'unsafe_query', __( 'Only SELECT queries are allowed.', 'wordpress-copilot' ) );
         }
 
         foreach ( self::BLOCKED_KEYWORDS as $kw ) {
             if ( preg_match( '/\b' . preg_quote( $kw, '/' ) . '\b/i', $trimmed ) ) {
                 return new WP_Error(
                     'unsafe_query',
-                    "Blocked keyword detected: {$kw}. Only pure SELECT queries are permitted."
+                    /* translators: %s: SQL keyword that was blocked */
+                    sprintf( __( 'Blocked keyword detected: %s. Only pure SELECT queries are permitted.', 'wordpress-copilot' ), $kw )
                 );
             }
         }
@@ -101,7 +102,7 @@ class WPC_Query_Executor {
 
     /** Render a table cell value as safe HTML */
     private static function render_cell( $cell ): string {
-        if ( $cell === null || $cell === '' ) return '<span class="wpc-cell-null">—</span>';
+        if ( $cell === null || $cell === '' ) return '<span class="wpc-cell-null">' . esc_html( __( '—', 'wordpress-copilot' ) ) . '</span>';
 
         $val = (string) $cell;
 
@@ -189,8 +190,8 @@ class WPC_Query_Executor {
 
         if ( $count === 0 ) {
             return [
-                'html'    => '<p class="wpc-no-results">No results found.</p>',
-                'summary' => $explanation . ' — No results found.',
+                'html'    => '<p class="wpc-no-results">' . esc_html( __( 'No results found.', 'wordpress-copilot' ) ) . '</p>',
+                'summary' => $explanation . ' — ' . __( 'No results found.', 'wordpress-copilot' ),
                 'count'   => 0,
             ];
         }
@@ -233,7 +234,11 @@ class WPC_Query_Executor {
 
         $max_rows = (int) WPC_Settings::get( 'max_rows', 100 );
         $limited  = $count >= $max_rows
-            ? ' <span class="wpc-limit-note">(limited to ' . $max_rows . ' rows)</span>'
+            ? ' <span class="wpc-limit-note">' . sprintf(
+                /* translators: %d: maximum number of rows */
+                __( '(limited to %d rows)', 'wordpress-copilot' ),
+                $max_rows
+            ) . '</span>'
             : '';
 
         return [

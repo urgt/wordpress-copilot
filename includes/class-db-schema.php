@@ -61,7 +61,7 @@ class WPC_DB_Schema {
         $skipped = count( $all_tables ) - count( $tables );
 
         $lines = [
-            'DATABASE: `' . DB_NAME . '`',
+            'DATABASE: `wordpress_db`',
             'WordPress table prefix: `' . $wpdb->prefix . '`',
             '',
             '=== TABLES (' . count($tables) . ' of ' . count($all_tables) . ') ===',

@@ -70,28 +70,28 @@ class WPC_Chat_Widget {
             'modelOptions' => $model_options,
             'model'       => $model,
             'i18n'        => [
-                'placeholder' => 'Ask anything about your data…',
-                'thinking'    => 'Generating SQL query…',
-                'executing'   => 'Running query…',
-                'error'       => 'Something went wrong. Please try again.',
-                'modelLabel'  => 'Model',
-                'retry'       => 'Try again',
-                'newChat'     => 'New chat',
-                'chats'       => 'Chats',
-                'deleteChat'  => 'Delete chat',
-                'confirmDeleteChat' => 'Delete this chat?',
-                'emptyChat'   => 'Start a new conversation to keep context.',
-                'voiceStart'  => 'Listening… speak now',
-                'noVoice'     => 'Voice input is not supported in this browser.',
+                'placeholder' => __( 'Ask anything about your data…', 'wordpress-copilot' ),
+                'thinking'    => __( 'Generating SQL query…', 'wordpress-copilot' ),
+                'executing'   => __( 'Running query…', 'wordpress-copilot' ),
+                'error'       => __( 'Something went wrong. Please try again.', 'wordpress-copilot' ),
+                'modelLabel'  => __( 'Model', 'wordpress-copilot' ),
+                'retry'       => __( 'Try again', 'wordpress-copilot' ),
+                'newChat'     => __( 'New chat', 'wordpress-copilot' ),
+                'chats'       => __( 'Chats', 'wordpress-copilot' ),
+                'deleteChat'  => __( 'Delete chat', 'wordpress-copilot' ),
+                'confirmDeleteChat' => __( 'Delete this chat?', 'wordpress-copilot' ),
+                'emptyChat'   => __( 'Start a new conversation to keep context.', 'wordpress-copilot' ),
+                'voiceStart'  => __( 'Listening… speak now', 'wordpress-copilot' ),
+                'noVoice'     => __( 'Voice input is not supported in this browser.', 'wordpress-copilot' ),
                 'examples'    => [
-                    '🛒 Top 10 best-selling products this month',
-                    '📦 Products with stock below 5 units',
-                    '👥 New users registered this week',
-                    '💰 Total revenue last 30 days',
-                    '🔁 Orders with status "on-hold"',
-                    '🏷️ Products without a featured image',
-                    '📊 Orders per day for the last 7 days',
-                    '👤 Customers who ordered more than 3 times',
+                    __( '🛒 Top 10 best-selling products this month', 'wordpress-copilot' ),
+                    __( '📦 Products with stock below 5 units', 'wordpress-copilot' ),
+                    __( '👥 New users registered this week', 'wordpress-copilot' ),
+                    __( '💰 Total revenue last 30 days', 'wordpress-copilot' ),
+                    __( '🔁 Orders with status "on-hold"', 'wordpress-copilot' ),
+                    __( '🏷️ Products without a featured image', 'wordpress-copilot' ),
+                    __( '📊 Orders per day for the last 7 days', 'wordpress-copilot' ),
+                    __( '👤 Customers who ordered more than 3 times', 'wordpress-copilot' ),
                 ],
             ],
         ]);
@@ -105,15 +105,15 @@ class WPC_Chat_Widget {
         <div id="wpc-widget">
             <button id="wpc-trigger" title="WordPress Copilot">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-                <span>Copilot</span>
+                <span><?php esc_html_e( 'Copilot', 'wordpress-copilot' ); ?></span>
             </button>
 
             <div id="wpc-panel">
                 <div class="wpc-layout">
                     <aside class="wpc-sidebar">
                         <div class="wpc-sidebar-head">
-                            <span class="wpc-sidebar-title">Chats</span>
-                            <button id="wpc-new-chat" type="button" class="wpc-new-chat-btn">+ New</button>
+                            <span class="wpc-sidebar-title"><?php esc_html_e( 'Chats', 'wordpress-copilot' ); ?></span>
+                            <button id="wpc-new-chat" type="button" class="wpc-new-chat-btn"><?php esc_html_e( '+ New', 'wordpress-copilot' ); ?></button>
                         </div>
                         <div id="wpc-chat-list"></div>
                     </aside>
@@ -122,18 +122,18 @@ class WPC_Chat_Widget {
                         <div class="wpc-header">
                             <div class="wpc-header-left">
                                 <svg class="wpc-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-                                <span class="wpc-header-chat-title" id="wpc-header-title">New chat</span>
+                                <span class="wpc-header-chat-title" id="wpc-header-title"><?php esc_html_e( 'New chat', 'wordpress-copilot' ); ?></span>
                             </div>
                             <div class="wpc-header-right">
                                 <span class="wpc-provider-badge" id="wpc-provider-badge"></span>
-                                <button class="wpc-icon-btn" id="wpc-fullscreen" title="Fullscreen">
+                                <button class="wpc-icon-btn" id="wpc-fullscreen" title="<?php echo esc_attr( __( 'Fullscreen', 'wordpress-copilot' ) ); ?>">
                                     <svg class="wpc-fs-expand" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                                     <svg class="wpc-fs-collapse" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg>
                                 </button>
-                                <button class="wpc-icon-btn" id="wpc-clear" title="Clear chat">
+                                <button class="wpc-icon-btn" id="wpc-clear" title="<?php echo esc_attr( __( 'Clear chat', 'wordpress-copilot' ) ); ?>">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                                 </button>
-                                <button class="wpc-icon-btn" id="wpc-close" title="Close">
+                                <button class="wpc-icon-btn" id="wpc-close" title="<?php echo esc_attr( __( 'Close', 'wordpress-copilot' ) ); ?>">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                 </button>
                             </div>
@@ -141,30 +141,30 @@ class WPC_Chat_Widget {
 
                         <div id="wpc-messages">
                             <div class="wpc-welcome">
-                                <p>Ask anything about your WordPress data in plain language.</p>
+                                <p><?php esc_html_e( 'Ask anything about your WordPress data in plain language.', 'wordpress-copilot' ); ?></p>
                                 <div id="wpc-examples"></div>
                             </div>
                         </div>
 
                         <div class="wpc-input-wrap">
-                            <textarea id="wpc-input" rows="2" placeholder="Ask anything about your data…"></textarea>
+                            <textarea id="wpc-input" rows="2" placeholder="<?php echo esc_attr( __( 'Ask anything about your data…', 'wordpress-copilot' ) ); ?>"></textarea>
                             <div class="wpc-input-actions">
                                 <div class="wpc-model-wrap">
                                     <div class="wpc-model-picker" id="wpc-model-picker">
                                         <button type="button" class="wpc-model-btn" id="wpc-model-btn">
                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" class="wpc-model-spark"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-                                            <span class="wpc-model-btn-label" id="wpc-model-label">Model</span>
+                                            <span class="wpc-model-btn-label" id="wpc-model-label"><?php esc_html_e( 'Model', 'wordpress-copilot' ); ?></span>
                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="wpc-model-chevron"><polyline points="6 9 12 15 18 9"/></svg>
                                         </button>
                                         <ul class="wpc-model-dropdown" id="wpc-model-dropdown"></ul>
                                     </div>
                                 </div>
                                 <div class="wpc-send-group">
-                                    <button id="wpc-voice" class="wpc-icon-btn wpc-voice-btn" title="Voice input" style="display:none">
+                                    <button id="wpc-voice" class="wpc-icon-btn wpc-voice-btn" title="<?php echo esc_attr( __( 'Voice input', 'wordpress-copilot' ) ); ?>" style="display:none">
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
                                     </button>
                                     <button id="wpc-send" class="wpc-send-btn">
-                                        Send
+                                        <?php esc_html_e( 'Send', 'wordpress-copilot' ); ?>
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                                     </button>
                                 </div>
@@ -184,7 +184,7 @@ class WPC_Chat_Widget {
 
         if ( ! self::current_user_allowed() ) {
             self::clean_output_buffer();
-            wp_send_json_error( [ 'message' => 'Access denied.' ], 403 );
+            wp_send_json_error( [ 'message' => __( 'Access denied.', 'wordpress-copilot' ) ], 403 );
         }
 
         $user_query     = sanitize_textarea_field( wp_unslash( $_POST['query'] ?? '' ) );
@@ -265,13 +265,13 @@ class WPC_Chat_Widget {
         // Manual nonce check for SSE (can't use check_ajax_referer with die())
         if ( ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['nonce'] ?? '' ) ), 'wpc_nonce' ) ) {
             http_response_code( 403 );
-            echo "data: " . wp_json_encode(['type'=>'error','data'=>'Security check failed.']) . "\n\n";
+            echo "data: " . wp_json_encode(['type'=>'error','data'=>__( 'Security check failed.', 'wordpress-copilot' )]) . "\n\n";
             die();
         }
 
         if ( ! self::current_user_allowed() ) {
             http_response_code( 403 );
-            echo "data: " . wp_json_encode(['type'=>'error','data'=>'Access denied.']) . "\n\n";
+            echo "data: " . wp_json_encode(['type'=>'error','data'=>__( 'Access denied.', 'wordpress-copilot' )]) . "\n\n";
             die();
         }
 
@@ -279,7 +279,7 @@ class WPC_Chat_Widget {
         $chat_context   = self::sanitize_context( wp_unslash( $_POST['context'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $selected_model = sanitize_text_field( wp_unslash( $_POST['model'] ?? '' ) );
         if ( empty( $user_query ) ) {
-            echo "data: " . wp_json_encode(['type'=>'error','data'=>'Please enter a question.']) . "\n\n";
+            echo "data: " . wp_json_encode(['type'=>'error','data'=>__( 'Please enter a question.', 'wordpress-copilot' )]) . "\n\n";
             die();
         }
 
@@ -300,7 +300,7 @@ class WPC_Chat_Widget {
             }
 
             // Signal that we're thinking
-            self::sse_push( 'status', 'Generating SQL query…' );
+            self::sse_push( 'status', __( 'Generating SQL query…', 'wordpress-copilot' ) );
 
             // Schema
             $schema = WPC_DB_Schema::get_schema_prompt();
@@ -324,7 +324,7 @@ class WPC_Chat_Widget {
             $explanation = $ai_result['explanation'] ?? '';
 
             // Signal we're executing SQL
-            self::sse_push( 'status', 'Running query…' );
+            self::sse_push( 'status', __( 'Running query…', 'wordpress-copilot' ) );
 
             // Execute
             $rows = WPC_Query_Executor::execute( $sql );
@@ -336,7 +336,7 @@ class WPC_Chat_Widget {
                 die();
             }
 
-            self::sse_push( 'status', 'Analyzing results…' );
+            self::sse_push( 'status', __( 'Analyzing results…', 'wordpress-copilot' ) );
             $explanation = self::build_answer_with_data( $engine, $user_query, $sql, $rows, $explanation );
             $formatted   = WPC_Query_Executor::format_results( $rows, $explanation );
             $exec_ms   = (int) round( ( microtime(true) - $start ) * 1000 );
@@ -361,7 +361,7 @@ class WPC_Chat_Widget {
 
         } catch ( \Throwable $e ) {
             WPC_Logger::error( 'Stream handler exception: ' . $e->getMessage() );
-            self::sse_push( 'error', 'An unexpected error occurred. Check PHP error log.' );
+            self::sse_push( 'error', __( 'An unexpected error occurred. Check PHP error log.', 'wordpress-copilot' ) );
         }
 
         die();

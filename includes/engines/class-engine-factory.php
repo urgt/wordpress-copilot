@@ -40,7 +40,8 @@ class WPC_Engine_Factory {
 			case 'google':
 				return new WPC_Engine_Google( $api_key, $model, $max_rows );
 			default:
-				return new WP_Error( 'unknown_provider', "Unknown provider: {$provider}" );
+				/* translators: %s: provider key name */
+				return new WP_Error( 'unknown_provider', sprintf( __( 'Unknown provider: %s', 'wordpress-copilot' ), $provider ) );
 		}
 	}
 
