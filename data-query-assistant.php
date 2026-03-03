@@ -1,17 +1,17 @@
 <?php
 /**
- * Plugin Name:  WordPress Copilot
- * Plugin URI:   https://github.com/urgt/wordpress-copilot
- * Description:  AI-powered natural language database assistant. Ask anything about your data in plain language — get instant SQL-powered answers.
+ * Plugin Name:  Data Query Assistant
+ * Plugin URI:   https://github.com/urgt/data-query-assistant
+ * Description:  AI assistant for safe, read-only WordPress data insights. Ask in plain language and get SQL-powered answers instantly.
  * Version:      1.0.0
- * Requires at least: 6.0
+ * Requires at least: 6.2
  * Requires PHP: 8.0
  * Author:       G'ayrat Urinbaev
  * License:      GPL-2.0+
  * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:  wordpress-copilot
+ * Text Domain:  data-query-assistant
  *
- * @package WordPress_Copilot
+ * @package Data_Query_Assistant
  */
 
 defined( 'ABSPATH' ) || exit;

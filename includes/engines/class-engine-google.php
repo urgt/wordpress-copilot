@@ -162,12 +162,25 @@ class WPC_Engine_Google extends WPC_Engine_Core {
 			add_action( 'http_api_curl', [ $this, 'stream_handler' ], 10, 3 );
 		}
 
+		try {
+			$encoded_body = $this->safe_json_encode( $body );
+		} catch ( \RuntimeException $e ) {
+			return new WP_Error(
+				'json_encode_error',
+				sprintf(
+					/* translators: %s: json encoding error message */
+					__( 'Failed to encode API request body: %s', 'data-query-assistant' ),
+					$e->getMessage()
+				)
+			);
+		}
+
 		$options = [
 			'method'    => 'POST',
 			'timeout'   => WPC_TIMEOUT,
 			'sslverify' => true,
 			'headers'   => $headers,
-			'body'      => $this->safe_json_encode( $body ),
+			'body'      => $encoded_body,
 		];
 
 		$response = wp_remote_post( $url, $options );
@@ -186,8 +199,10 @@ class WPC_Engine_Google extends WPC_Engine_Core {
 
 		if ( 200 !== $code ) {
 			// Google wraps errors in {error: {code, message, status}}
-			$msg = $resp_body['error']['message']
-				?? 'Google API error (HTTP ' . $code . ')';
+			$msg = is_array( $resp_body ) ? ( $resp_body['error']['message'] ?? null ) : null;
+			if ( empty( $msg ) ) {
+				$msg = 'Google API error (HTTP ' . $code . ')';
+			}
 			return new WP_Error( 'api_error', $msg );
 		}
 

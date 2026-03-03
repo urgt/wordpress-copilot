@@ -1,6 +1,6 @@
 <?php
 /**
- * Uninstall WordPress Copilot.
+ * Uninstall Data Query Assistant.
  *
  * Fires when the plugin is deleted via the WordPress admin.
  * Removes all plugin data: database tables and options.

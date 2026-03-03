@@ -95,15 +95,20 @@ class WPC_Chat_Storage {
 		}
 
 		// Strip heavy HTML from bot messages to keep DB size sane
-		$messages = array_map(
+		$messages      = array_map(
 			function ( $msg ) {
 				if ( ( $msg['role'] ?? '' ) === 'bot' && isset( $msg['data']['html'] ) ) {
-						unset( $msg['data']['html'] );
+					unset( $msg['data']['html'] );
 				}
 				return $msg;
 			},
 			$messages
 		);
+		$messages_json = wp_json_encode( $messages );
+		if ( false === $messages_json ) {
+			WPC_Logger::warn( 'Failed to encode chat messages for DB storage.' );
+			return false;
+		}
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Existence check before write; caching inappropriate here.
 		$exists = $wpdb->get_var(
@@ -122,7 +127,7 @@ class WPC_Chat_Storage {
 				self::table(),
 				[
 					'title'      => $title,
-					'messages'   => wp_json_encode( $messages ),
+					'messages'   => $messages_json,
 					'updated_at' => current_time( 'mysql' ),
 				],
 				[
@@ -141,7 +146,7 @@ class WPC_Chat_Storage {
 					'user_id'    => $user_id,
 					'provider'   => $provider,
 					'title'      => $title,
-					'messages'   => wp_json_encode( $messages ),
+					'messages'   => $messages_json,
 					'created_at' => current_time( 'mysql' ),
 					'updated_at' => current_time( 'mysql' ),
 				],
@@ -176,7 +181,7 @@ class WPC_Chat_Storage {
 	public static function ajax_load(): void {
 		self::verify_nonce(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		if ( ! WPC_Chat_Widget::current_user_allowed() ) {
-			wp_send_json_error( __( 'Access denied.', 'wordpress-copilot' ), 403 );
+			wp_send_json_error( __( 'Access denied.', 'data-query-assistant' ), 403 );
 		}
 		$user_id  = get_current_user_id();
 		$provider = sanitize_text_field( wp_unslash( $_POST['provider'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -186,7 +191,7 @@ class WPC_Chat_Storage {
 	public static function ajax_save(): void {
 		self::verify_nonce(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		if ( ! WPC_Chat_Widget::current_user_allowed() ) {
-			wp_send_json_error( __( 'Access denied.', 'wordpress-copilot' ), 403 );
+			wp_send_json_error( __( 'Access denied.', 'data-query-assistant' ), 403 );
 		}
 		$user_id  = get_current_user_id();
 		$provider = sanitize_text_field( wp_unslash( $_POST['provider'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -194,27 +199,27 @@ class WPC_Chat_Storage {
 		$chat_raw = wp_unslash( $_POST['chat'] ?? null );
 
 		if ( ! $chat_raw ) {
-			wp_send_json_error( __( 'Missing chat data', 'wordpress-copilot' ) );
+			wp_send_json_error( __( 'Missing chat data', 'data-query-assistant' ) );
 		}
 
 		$chat = is_array( $chat_raw ) ? array_map( 'sanitize_text_field', (array) $chat_raw ) : json_decode( (string) $chat_raw, true );
 		if ( ! is_array( $chat ) ) {
-			wp_send_json_error( __( 'Invalid chat data', 'wordpress-copilot' ) );
+			wp_send_json_error( __( 'Invalid chat data', 'data-query-assistant' ) );
 		}
 
 		$ok = self::save_chat( $user_id, $provider, $chat );
-		$ok ? wp_send_json_success() : wp_send_json_error( __( 'DB error', 'wordpress-copilot' ) );
+		$ok ? wp_send_json_success() : wp_send_json_error( __( 'DB error', 'data-query-assistant' ) );
 	}
 
 	public static function ajax_delete(): void {
 		self::verify_nonce(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		if ( ! WPC_Chat_Widget::current_user_allowed() ) {
-			wp_send_json_error( __( 'Access denied.', 'wordpress-copilot' ), 403 );
+			wp_send_json_error( __( 'Access denied.', 'data-query-assistant' ), 403 );
 		}
 		$user_id = get_current_user_id();
 		$chat_id = sanitize_text_field( wp_unslash( $_POST['chat_id'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
 		if ( ! $chat_id ) {
-			wp_send_json_error( __( 'Missing chat_id', 'wordpress-copilot' ) );
+			wp_send_json_error( __( 'Missing chat_id', 'data-query-assistant' ) );
 		}
 		self::delete_chat( $user_id, $chat_id );
 		wp_send_json_success();
@@ -222,7 +227,7 @@ class WPC_Chat_Storage {
 
 	private static function verify_nonce(): void {
 		if ( ! check_ajax_referer( 'wpc_nonce', 'nonce', false ) ) {
-			wp_send_json_error( __( 'Invalid nonce', 'wordpress-copilot' ), 403 );
+			wp_send_json_error( __( 'Invalid nonce', 'data-query-assistant' ), 403 );
 		}
 	}
 }

@@ -78,34 +78,34 @@ class WPC_Chat_Widget {
 				'providerLabel' => $provider_label,
 				'modelOptions'  => $model_options,
 				'model'         => $model,
-				'settingsUrl'   => admin_url( 'options-general.php?page=wordpress-copilot' ),
+				'settingsUrl'   => admin_url( 'options-general.php?page=data-query-assistant' ),
 				'hasApiKey'     => ! empty( WPC_Settings::get( 'api_key' ) ),
 				'i18n'          => [
-					'placeholder'       => __( 'Ask anything about your data…', 'wordpress-copilot' ),
-					'thinking'          => __( 'Generating SQL query…', 'wordpress-copilot' ),
-					'executing'         => __( 'Running query…', 'wordpress-copilot' ),
-					'error'             => __( 'Something went wrong. Please try again.', 'wordpress-copilot' ),
-					'modelLabel'        => __( 'Model', 'wordpress-copilot' ),
-					'retry'             => __( 'Try again', 'wordpress-copilot' ),
-					'newChat'           => __( 'New chat', 'wordpress-copilot' ),
-					'chats'             => __( 'Chats', 'wordpress-copilot' ),
-					'deleteChat'        => __( 'Delete chat', 'wordpress-copilot' ),
-					'confirmDeleteChat' => __( 'Delete this chat?', 'wordpress-copilot' ),
-					'emptyChat'         => __( 'Start a new conversation to keep context.', 'wordpress-copilot' ),
-					'voiceStart'        => __( 'Listening… speak now', 'wordpress-copilot' ),
-					'noVoice'           => __( 'Voice input is not supported in this browser.', 'wordpress-copilot' ),
-					'noApiKey'          => __( 'API key not configured', 'wordpress-copilot' ),
-					'noApiKeyMsg'       => __( 'To use WordPress Copilot, add your AI provider API key in plugin settings.', 'wordpress-copilot' ),
-					'goToSettings'      => __( 'Open Settings', 'wordpress-copilot' ),
+					'placeholder'       => __( 'Ask anything about your data…', 'data-query-assistant' ),
+					'thinking'          => __( 'Generating SQL query…', 'data-query-assistant' ),
+					'executing'         => __( 'Running query…', 'data-query-assistant' ),
+					'error'             => __( 'Something went wrong. Please try again.', 'data-query-assistant' ),
+					'modelLabel'        => __( 'Model', 'data-query-assistant' ),
+					'retry'             => __( 'Try again', 'data-query-assistant' ),
+					'newChat'           => __( 'New chat', 'data-query-assistant' ),
+					'chats'             => __( 'Chats', 'data-query-assistant' ),
+					'deleteChat'        => __( 'Delete chat', 'data-query-assistant' ),
+					'confirmDeleteChat' => __( 'Delete this chat?', 'data-query-assistant' ),
+					'emptyChat'         => __( 'Start a new conversation to keep context.', 'data-query-assistant' ),
+					'voiceStart'        => __( 'Listening… speak now', 'data-query-assistant' ),
+					'noVoice'           => __( 'Voice input is not supported in this browser.', 'data-query-assistant' ),
+					'noApiKey'          => __( 'API key not configured', 'data-query-assistant' ),
+					'noApiKeyMsg'       => __( 'To use Data Query Assistant, add your AI provider API key in plugin settings.', 'data-query-assistant' ),
+					'goToSettings'      => __( 'Open Settings', 'data-query-assistant' ),
 					'examples'          => [
-						__( '🛒 Top 10 best-selling products this month', 'wordpress-copilot' ),
-						__( '📦 Products with stock below 5 units', 'wordpress-copilot' ),
-						__( '👥 New users registered this week', 'wordpress-copilot' ),
-						__( '💰 Total revenue last 30 days', 'wordpress-copilot' ),
-						__( '🔁 Orders with status "on-hold"', 'wordpress-copilot' ),
-						__( '🏷️ Products without a featured image', 'wordpress-copilot' ),
-						__( '📊 Orders per day for the last 7 days', 'wordpress-copilot' ),
-						__( '👤 Customers who ordered more than 3 times', 'wordpress-copilot' ),
+						__( '🛒 Top 10 best-selling products this month', 'data-query-assistant' ),
+						__( '📦 Products with stock below 5 units', 'data-query-assistant' ),
+						__( '👥 New users registered this week', 'data-query-assistant' ),
+						__( '💰 Total revenue last 30 days', 'data-query-assistant' ),
+						__( '🔁 Orders with status "on-hold"', 'data-query-assistant' ),
+						__( '🏷️ Products without a featured image', 'data-query-assistant' ),
+						__( '📊 Orders per day for the last 7 days', 'data-query-assistant' ),
+						__( '👤 Customers who ordered more than 3 times', 'data-query-assistant' ),
 					],
 				],
 			]
@@ -120,7 +120,7 @@ class WPC_Chat_Widget {
 		}
 		?>
 		<div id="wpc-widget">
-			<button id="wpc-trigger" title="WordPress Copilot" aria-label="WordPress Copilot" aria-expanded="false">
+			<button id="wpc-trigger" title="Data Query Assistant" aria-label="Data Query Assistant" aria-expanded="false">
 				<span class="wpc-siri-orb" aria-hidden="true">
 					<span class="wpc-siri-blob wpc-siri-blob-1"></span>
 					<span class="wpc-siri-blob wpc-siri-blob-2"></span>
@@ -135,8 +135,8 @@ class WPC_Chat_Widget {
 				<div class="wpc-layout">
 					<aside class="wpc-sidebar">
 						<div class="wpc-sidebar-head">
-							<span class="wpc-sidebar-title"><?php esc_html_e( 'Chats', 'wordpress-copilot' ); ?></span>
-							<button id="wpc-new-chat" type="button" class="wpc-new-chat-btn"><?php esc_html_e( '+ New', 'wordpress-copilot' ); ?></button>
+							<span class="wpc-sidebar-title"><?php esc_html_e( 'Chats', 'data-query-assistant' ); ?></span>
+							<button id="wpc-new-chat" type="button" class="wpc-new-chat-btn"><?php esc_html_e( '+ New', 'data-query-assistant' ); ?></button>
 						</div>
 						<div id="wpc-chat-list"></div>
 					</aside>
@@ -145,18 +145,18 @@ class WPC_Chat_Widget {
 						<div class="wpc-header">
 							<div class="wpc-header-left">
 								<svg class="wpc-header-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-								<span class="wpc-header-chat-title" id="wpc-header-title"><?php esc_html_e( 'New chat', 'wordpress-copilot' ); ?></span>
+								<span class="wpc-header-chat-title" id="wpc-header-title"><?php esc_html_e( 'New chat', 'data-query-assistant' ); ?></span>
 							</div>
 							<div class="wpc-header-right">
 								<span class="wpc-provider-badge" id="wpc-provider-badge"></span>
-								<button class="wpc-icon-btn" id="wpc-fullscreen" title="<?php echo esc_attr( __( 'Fullscreen', 'wordpress-copilot' ) ); ?>">
+								<button class="wpc-icon-btn" id="wpc-fullscreen" title="<?php echo esc_attr( __( 'Fullscreen', 'data-query-assistant' ) ); ?>">
 									<svg class="wpc-fs-expand" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
 									<svg class="wpc-fs-collapse" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="10" y1="14" x2="3" y2="21"/><line x1="21" y1="3" x2="14" y2="10"/></svg>
 								</button>
-								<button class="wpc-icon-btn" id="wpc-clear" title="<?php echo esc_attr( __( 'Clear chat', 'wordpress-copilot' ) ); ?>">
+								<button class="wpc-icon-btn" id="wpc-clear" title="<?php echo esc_attr( __( 'Clear chat', 'data-query-assistant' ) ); ?>">
 									<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
 								</button>
-								<button class="wpc-icon-btn" id="wpc-close" title="<?php echo esc_attr( __( 'Close', 'wordpress-copilot' ) ); ?>">
+								<button class="wpc-icon-btn" id="wpc-close" title="<?php echo esc_attr( __( 'Close', 'data-query-assistant' ) ); ?>">
 									<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 								</button>
 							</div>
@@ -164,30 +164,30 @@ class WPC_Chat_Widget {
 
 						<div id="wpc-messages">
 							<div class="wpc-welcome">
-								<p><?php esc_html_e( 'Ask anything about your WordPress data in plain language.', 'wordpress-copilot' ); ?></p>
+								<p><?php esc_html_e( 'Ask anything about your WordPress data in plain language.', 'data-query-assistant' ); ?></p>
 								<div id="wpc-examples"></div>
 							</div>
 						</div>
 
 						<div class="wpc-input-wrap">
-							<textarea id="wpc-input" rows="2" placeholder="<?php echo esc_attr( __( 'Ask anything about your data…', 'wordpress-copilot' ) ); ?>"></textarea>
+							<textarea id="wpc-input" rows="2" placeholder="<?php echo esc_attr( __( 'Ask anything about your data…', 'data-query-assistant' ) ); ?>"></textarea>
 							<div class="wpc-input-actions">
 								<div class="wpc-model-wrap">
 									<div class="wpc-model-picker" id="wpc-model-picker">
 										<button type="button" class="wpc-model-btn" id="wpc-model-btn">
 											<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" class="wpc-model-spark"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-											<span class="wpc-model-btn-label" id="wpc-model-label"><?php esc_html_e( 'Model', 'wordpress-copilot' ); ?></span>
+											<span class="wpc-model-btn-label" id="wpc-model-label"><?php esc_html_e( 'Model', 'data-query-assistant' ); ?></span>
 											<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="wpc-model-chevron"><polyline points="6 9 12 15 18 9"/></svg>
 										</button>
 										<ul class="wpc-model-dropdown" id="wpc-model-dropdown"></ul>
 									</div>
 								</div>
 								<div class="wpc-send-group">
-									<button id="wpc-voice" class="wpc-icon-btn wpc-voice-btn" title="<?php echo esc_attr( __( 'Voice input', 'wordpress-copilot' ) ); ?>" style="display:none">
+									<button id="wpc-voice" class="wpc-icon-btn wpc-voice-btn" title="<?php echo esc_attr( __( 'Voice input', 'data-query-assistant' ) ); ?>" style="display:none">
 										<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
 									</button>
 									<button id="wpc-send" class="wpc-send-btn">
-										<?php esc_html_e( 'Send', 'wordpress-copilot' ); ?>
+										<?php esc_html_e( 'Send', 'data-query-assistant' ); ?>
 										<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
 									</button>
 								</div>
@@ -208,70 +208,70 @@ class WPC_Chat_Widget {
 
 						<div class="wpc-ob-slide active" data-slide="0">
 							<div class="wpc-ob-emoji">✨</div>
-							<h2><?php esc_html_e( 'Meet WordPress Copilot', 'wordpress-copilot' ); ?></h2>
-							<p><?php esc_html_e( 'Ask questions about your WordPress data in your native language — no SQL knowledge needed.', 'wordpress-copilot' ); ?></p>
-							<p class="wpc-ob-sub"><?php esc_html_e( 'Powered by AI. Runs only on your WordPress admin.', 'wordpress-copilot' ); ?></p>
+							<h2><?php esc_html_e( 'Meet Data Query Assistant', 'data-query-assistant' ); ?></h2>
+							<p><?php esc_html_e( 'Ask questions about your WordPress data in your native language — no SQL knowledge needed.', 'data-query-assistant' ); ?></p>
+							<p class="wpc-ob-sub"><?php esc_html_e( 'Powered by AI. Runs only on your WordPress admin.', 'data-query-assistant' ); ?></p>
 						</div>
 
 						<div class="wpc-ob-slide" data-slide="1">
 							<div class="wpc-ob-emoji">🔑</div>
-							<h2><?php esc_html_e( 'Add your API key', 'wordpress-copilot' ); ?></h2>
-							<p><?php esc_html_e( 'WordPress Copilot uses an AI provider to generate queries. An API key is required — without it, nothing will work.', 'wordpress-copilot' ); ?></p>
+							<h2><?php esc_html_e( 'Add your API key', 'data-query-assistant' ); ?></h2>
+							<p><?php esc_html_e( 'Data Query Assistant uses an AI provider to generate queries. An API key is required — without it, nothing will work.', 'data-query-assistant' ); ?></p>
 							<div class="wpc-ob-steps">
 								<div class="wpc-ob-api-step">
-									<strong>1.</strong> <?php esc_html_e( 'Choose a provider: Anthropic, OpenAI, or Google', 'wordpress-copilot' ); ?>
+									<strong>1.</strong> <?php esc_html_e( 'Choose a provider: Anthropic, OpenAI, or Google', 'data-query-assistant' ); ?>
 								</div>
 								<div class="wpc-ob-api-step">
-									<strong>2.</strong> <?php esc_html_e( 'Get an API key from your provider\'s dashboard', 'wordpress-copilot' ); ?>
+									<strong>2.</strong> <?php esc_html_e( 'Get an API key from your provider\'s dashboard', 'data-query-assistant' ); ?>
 								</div>
 								<div class="wpc-ob-api-step">
-									<strong>3.</strong> <?php esc_html_e( 'Paste it in plugin settings', 'wordpress-copilot' ); ?>
+									<strong>3.</strong> <?php esc_html_e( 'Paste it in plugin settings', 'data-query-assistant' ); ?>
 								</div>
 							</div>
-							<a href="<?php echo esc_url( admin_url( 'options-general.php?page=wordpress-copilot' ) ); ?>" class="wpc-ob-settings-btn"><?php esc_html_e( 'Open Settings', 'wordpress-copilot' ); ?> →</a>
+							<a href="<?php echo esc_url( admin_url( 'options-general.php?page=data-query-assistant' ) ); ?>" class="wpc-ob-settings-btn"><?php esc_html_e( 'Open Settings', 'data-query-assistant' ); ?> →</a>
 						</div>
 
 						<div class="wpc-ob-slide" data-slide="2">
 							<div class="wpc-ob-emoji">⚙️</div>
-							<h2><?php esc_html_e( 'How it works', 'wordpress-copilot' ); ?></h2>
+							<h2><?php esc_html_e( 'How it works', 'data-query-assistant' ); ?></h2>
 							<ol class="wpc-ob-steps">
-								<li><strong><?php esc_html_e( 'You ask', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'a question in plain language', 'wordpress-copilot' ); ?></li>
-								<li><strong><?php esc_html_e( 'AI generates', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'a safe SQL SELECT query', 'wordpress-copilot' ); ?></li>
-								<li><strong><?php esc_html_e( 'WordPress runs', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'the query on your database', 'wordpress-copilot' ); ?></li>
-								<li><strong><?php esc_html_e( 'Results shown', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'as a table or chart', 'wordpress-copilot' ); ?></li>
+								<li><strong><?php esc_html_e( 'You ask', 'data-query-assistant' ); ?></strong> <?php esc_html_e( 'a question in plain language', 'data-query-assistant' ); ?></li>
+								<li><strong><?php esc_html_e( 'AI generates', 'data-query-assistant' ); ?></strong> <?php esc_html_e( 'a safe SQL SELECT query', 'data-query-assistant' ); ?></li>
+								<li><strong><?php esc_html_e( 'WordPress runs', 'data-query-assistant' ); ?></strong> <?php esc_html_e( 'the query on your database', 'data-query-assistant' ); ?></li>
+								<li><strong><?php esc_html_e( 'Results shown', 'data-query-assistant' ); ?></strong> <?php esc_html_e( 'as a table or chart', 'data-query-assistant' ); ?></li>
 							</ol>
 						</div>
 
 						<div class="wpc-ob-slide" data-slide="3">
 							<div class="wpc-ob-emoji">🔒</div>
-							<h2><?php esc_html_e( 'Is it safe?', 'wordpress-copilot' ); ?></h2>
+							<h2><?php esc_html_e( 'Is it safe?', 'data-query-assistant' ); ?></h2>
 							<ul class="wpc-ob-safety">
-								<li>✅ <strong><?php esc_html_e( 'Read-only', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'only SELECT queries run', 'wordpress-copilot' ); ?></li>
-								<li>✅ <strong><?php esc_html_e( 'Admin only', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'requires WordPress admin access', 'wordpress-copilot' ); ?></li>
-								<li>✅ <strong><?php esc_html_e( 'Your data stays private', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'only schema structure is sent to AI, not actual data values', 'wordpress-copilot' ); ?></li>
-								<li>✅ <strong><?php esc_html_e( 'Validated', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'all queries are checked before execution', 'wordpress-copilot' ); ?></li>
+								<li>✅ <strong><?php esc_html_e( 'Read-only', 'data-query-assistant' ); ?></strong> — <?php esc_html_e( 'only SELECT queries run', 'data-query-assistant' ); ?></li>
+								<li>✅ <strong><?php esc_html_e( 'Admin only', 'data-query-assistant' ); ?></strong> — <?php esc_html_e( 'requires WordPress admin access', 'data-query-assistant' ); ?></li>
+								<li>✅ <strong><?php esc_html_e( 'Your data stays private', 'data-query-assistant' ); ?></strong> — <?php esc_html_e( 'only schema structure is sent to AI, not actual data values', 'data-query-assistant' ); ?></li>
+								<li>✅ <strong><?php esc_html_e( 'Validated', 'data-query-assistant' ); ?></strong> — <?php esc_html_e( 'all queries are checked before execution', 'data-query-assistant' ); ?></li>
 							</ul>
 						</div>
 
 						<div class="wpc-ob-slide" data-slide="4">
 							<div class="wpc-ob-emoji">💡</div>
-							<h2><?php esc_html_e( 'Try these examples', 'wordpress-copilot' ); ?></h2>
+							<h2><?php esc_html_e( 'Try these examples', 'data-query-assistant' ); ?></h2>
 							<div class="wpc-ob-examples">
-								<button class="wpc-ob-example" data-query="Show me the 10 most recent posts with their authors">📝 <?php esc_html_e( 'Recent posts with authors', 'wordpress-copilot' ); ?></button>
-								<button class="wpc-ob-example" data-query="How many users registered each month this year?">👥 <?php esc_html_e( 'User registrations by month', 'wordpress-copilot' ); ?></button>
-								<button class="wpc-ob-example" data-query="What are the top 5 most commented posts?">💬 <?php esc_html_e( 'Top commented posts', 'wordpress-copilot' ); ?></button>
-								<button class="wpc-ob-example" data-query="Show me all products with stock less than 5">📦 <?php esc_html_e( 'Low stock products', 'wordpress-copilot' ); ?></button>
-								<button class="wpc-ob-example" data-query="Count posts by category">📂 <?php esc_html_e( 'Posts by category', 'wordpress-copilot' ); ?></button>
-								<button class="wpc-ob-example" data-query="Show me orders placed today">🛒 <?php esc_html_e( "Today's orders", 'wordpress-copilot' ); ?></button>
+								<button class="wpc-ob-example" data-query="Show me the 10 most recent posts with their authors">📝 <?php esc_html_e( 'Recent posts with authors', 'data-query-assistant' ); ?></button>
+								<button class="wpc-ob-example" data-query="How many users registered each month this year?">👥 <?php esc_html_e( 'User registrations by month', 'data-query-assistant' ); ?></button>
+								<button class="wpc-ob-example" data-query="What are the top 5 most commented posts?">💬 <?php esc_html_e( 'Top commented posts', 'data-query-assistant' ); ?></button>
+								<button class="wpc-ob-example" data-query="Show me all products with stock less than 5">📦 <?php esc_html_e( 'Low stock products', 'data-query-assistant' ); ?></button>
+								<button class="wpc-ob-example" data-query="Count posts by category">📂 <?php esc_html_e( 'Posts by category', 'data-query-assistant' ); ?></button>
+								<button class="wpc-ob-example" data-query="Show me orders placed today">🛒 <?php esc_html_e( "Today's orders", 'data-query-assistant' ); ?></button>
 							</div>
 						</div>
 
 						<div class="wpc-ob-nav">
-							<button class="wpc-ob-skip" id="wpc-ob-skip"><?php esc_html_e( 'Skip', 'wordpress-copilot' ); ?></button>
+							<button class="wpc-ob-skip" id="wpc-ob-skip"><?php esc_html_e( 'Skip', 'data-query-assistant' ); ?></button>
 							<div class="wpc-ob-nav-right">
-								<button class="wpc-ob-prev" id="wpc-ob-prev" style="display:none">← <?php esc_html_e( 'Back', 'wordpress-copilot' ); ?></button>
-								<button class="wpc-ob-next" id="wpc-ob-next"><?php esc_html_e( 'Next', 'wordpress-copilot' ); ?> →</button>
-								<button class="wpc-ob-finish" id="wpc-ob-finish" style="display:none"><?php esc_html_e( "Let's go!", 'wordpress-copilot' ); ?> 🚀</button>
+								<button class="wpc-ob-prev" id="wpc-ob-prev" style="display:none">← <?php esc_html_e( 'Back', 'data-query-assistant' ); ?></button>
+								<button class="wpc-ob-next" id="wpc-ob-next"><?php esc_html_e( 'Next', 'data-query-assistant' ); ?> →</button>
+								<button class="wpc-ob-finish" id="wpc-ob-finish" style="display:none"><?php esc_html_e( "Let's go!", 'data-query-assistant' ); ?> 🚀</button>
 							</div>
 						</div>
 					</div>
@@ -288,9 +288,10 @@ class WPC_Chat_Widget {
 
 		if ( ! self::current_user_allowed() ) {
 			self::clean_output_buffer();
-			wp_send_json_error( [ 'message' => __( 'Access denied.', 'wordpress-copilot' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Access denied.', 'data-query-assistant' ) ], 403 );
 		}
 
+		$start          = microtime( true );
 		$user_query     = sanitize_textarea_field( wp_unslash( $_POST['query'] ?? '' ) );
 		$chat_context   = self::sanitize_context( wp_unslash( $_POST['context'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$selected_model = sanitize_text_field( wp_unslash( $_POST['model'] ?? '' ) );
@@ -379,7 +380,7 @@ class WPC_Chat_Widget {
 			echo 'data: ' . wp_json_encode(
 				[
 					'type' => 'error',
-					'data' => __( 'Security check failed.', 'wordpress-copilot' ),
+					'data' => __( 'Security check failed.', 'data-query-assistant' ),
 				]
 			) . "\n\n";
 			die();
@@ -390,7 +391,7 @@ class WPC_Chat_Widget {
 			echo 'data: ' . wp_json_encode(
 				[
 					'type' => 'error',
-					'data' => __( 'Access denied.', 'wordpress-copilot' ),
+					'data' => __( 'Access denied.', 'data-query-assistant' ),
 				]
 			) . "\n\n";
 			die();
@@ -403,7 +404,7 @@ class WPC_Chat_Widget {
 			echo 'data: ' . wp_json_encode(
 				[
 					'type' => 'error',
-					'data' => __( 'Please enter a question.', 'wordpress-copilot' ),
+					'data' => __( 'Please enter a question.', 'data-query-assistant' ),
 				]
 			) . "\n\n";
 			die();
@@ -426,7 +427,7 @@ class WPC_Chat_Widget {
 			}
 
 			// Signal that we're thinking
-			self::sse_push( 'status', __( 'Generating SQL query…', 'wordpress-copilot' ) );
+			self::sse_push( 'status', __( 'Generating SQL query…', 'data-query-assistant' ) );
 
 			// Schema
 			$schema = WPC_DB_Schema::get_schema_prompt();
@@ -455,7 +456,7 @@ class WPC_Chat_Widget {
 			$explanation = $ai_result['explanation'] ?? '';
 
 			// Signal we're executing SQL
-			self::sse_push( 'status', __( 'Running query…', 'wordpress-copilot' ) );
+			self::sse_push( 'status', __( 'Running query…', 'data-query-assistant' ) );
 
 			// Execute
 			$rows = WPC_Query_Executor::execute( $sql );
@@ -471,7 +472,7 @@ class WPC_Chat_Widget {
 				die();
 			}
 
-			self::sse_push( 'status', __( 'Analyzing results…', 'wordpress-copilot' ) );
+			self::sse_push( 'status', __( 'Analyzing results…', 'data-query-assistant' ) );
 			$explanation = self::build_answer_with_data( $engine, $user_query, $sql, $rows, $explanation );
 			$formatted   = WPC_Query_Executor::format_results( $rows, $explanation );
 			$exec_ms     = (int) round( ( microtime( true ) - $start ) * 1000 );
@@ -501,7 +502,7 @@ class WPC_Chat_Widget {
 
 		} catch ( \Throwable $e ) {
 			WPC_Logger::error( 'Stream handler exception: ' . $e->getMessage() );
-			self::sse_push( 'error', __( 'An unexpected error occurred. Check PHP error log.', 'wordpress-copilot' ) );
+			self::sse_push( 'error', __( 'An unexpected error occurred. Check PHP error log.', 'data-query-assistant' ) );
 		}
 
 		die();

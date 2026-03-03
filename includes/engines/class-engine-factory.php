@@ -20,8 +20,8 @@ class WPC_Engine_Factory {
 				'no_api_key',
 				sprintf(
 					/* translators: %s: URL to the plugin settings page */
-					__( 'API key is not configured. Please go to <a href="%s">Settings → WP Copilot</a>.', 'wordpress-copilot' ),
-					admin_url( 'options-general.php?page=wordpress-copilot' )
+					__( 'API key is not configured. Please go to <a href="%s">Settings → Data Query Assistant</a>.', 'data-query-assistant' ),
+					admin_url( 'options-general.php?page=data-query-assistant' )
 				)
 			);
 		}
@@ -41,7 +41,7 @@ class WPC_Engine_Factory {
 				return new WPC_Engine_Google( $api_key, $model, $max_rows );
 			default:
 				/* translators: %s: provider key name */
-				return new WP_Error( 'unknown_provider', sprintf( __( 'Unknown provider: %s', 'wordpress-copilot' ), $provider ) );
+				return new WP_Error( 'unknown_provider', sprintf( __( 'Unknown provider: %s', 'data-query-assistant' ), $provider ) );
 		}
 	}
 

@@ -33,7 +33,7 @@ class WPC_Query_Executor {
 		$trimmed = ltrim( $sql );
 
 		if ( ! preg_match( '/^SELECT\s/i', $trimmed ) ) {
-			return new WP_Error( 'unsafe_query', __( 'Only SELECT queries are allowed.', 'wordpress-copilot' ) );
+			return new WP_Error( 'unsafe_query', __( 'Only SELECT queries are allowed.', 'data-query-assistant' ) );
 		}
 
 		foreach ( self::BLOCKED_KEYWORDS as $kw ) {
@@ -41,7 +41,7 @@ class WPC_Query_Executor {
 				return new WP_Error(
 					'unsafe_query',
 					/* translators: %s: SQL keyword that was blocked */
-					sprintf( __( 'Blocked keyword detected: %s. Only pure SELECT queries are permitted.', 'wordpress-copilot' ), $kw )
+					sprintf( __( 'Blocked keyword detected: %s. Only pure SELECT queries are permitted.', 'data-query-assistant' ), $kw )
 				);
 			}
 		}
@@ -62,11 +62,11 @@ class WPC_Query_Executor {
 		// Optional query timeout for large databases
 		$timeout = (int) WPC_Settings::get( 'query_timeout', 15 );
 		if ( $timeout > 0 ) {
-			$wpdb->query( $wpdb->prepare( 'SET SESSION MAX_EXECUTION_TIME=%d', $timeout * 1000 ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			self::set_session_timeout( $timeout );
 		}
 
 		$wpdb->hide_errors();
-		$rows = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery
+		$rows = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery,PluginCheck.Security.DirectDB.UnescapedDBParameter -- SQL is validated as read-only SELECT by self::validate().
 		$wpdb->show_errors();
 
 		if ( $wpdb->last_error ) {
@@ -87,6 +87,30 @@ class WPC_Query_Executor {
 	}
 
 	/**
+	 * Set query timeout in a DB-engine compatible way.
+	 */
+	private static function set_session_timeout( int $timeout ): void {
+		global $wpdb;
+
+		$wpdb->query( $wpdb->prepare( 'SET SESSION MAX_EXECUTION_TIME=%d', $timeout * 1000 ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( '' === $wpdb->last_error ) {
+			return;
+		}
+
+		$mysql_error = $wpdb->last_error;
+		$wpdb->query( $wpdb->prepare( 'SET SESSION max_statement_time=%f', (float) $timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		if ( '' !== $wpdb->last_error ) {
+			WPC_Logger::warn(
+				sprintf(
+					'Unable to apply query timeout (MAX_EXECUTION_TIME: %1$s | max_statement_time: %2$s)',
+					$mysql_error,
+					$wpdb->last_error
+				)
+			);
+		}
+	}
+
+	/**
 	 * Unserialize PHP-serialized values (e.g. wp_options data).
 	 * Does NOT reformat plain strings — that's handled by render_cell at display time.
 	 */
@@ -102,9 +126,10 @@ class WPC_Query_Executor {
 						continue;
 					}
 
-                 // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize -- pre-validated by is_serialized(), reading existing WP-serialized DB data.
-					$unserialized = @unserialize( $val );
-					if ( false === $unserialized ) {
+					$serialized_value = trim( $val );
+					// phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize -- pre-validated by is_serialized(), reading existing WP-serialized DB data; classes disabled for safety.
+					$unserialized = @unserialize( $serialized_value, [ 'allowed_classes' => false ] );
+					if ( false === $unserialized && 'b:0;' !== $serialized_value ) {
 						continue;
 					}
 
@@ -129,7 +154,7 @@ class WPC_Query_Executor {
 	/** Render a table cell value as safe HTML */
 	private static function render_cell( $cell ): string {
 		if ( null === $cell || '' === $cell ) {
-			return '<span class="wpc-cell-null">' . esc_html( __( '—', 'wordpress-copilot' ) ) . '</span>';
+			return '<span class="wpc-cell-null">' . esc_html( __( '—', 'data-query-assistant' ) ) . '</span>';
 		}
 
 		$val = (string) $cell;
@@ -237,8 +262,8 @@ class WPC_Query_Executor {
 
 		if ( 0 === $count ) {
 			return [
-				'html'    => '<p class="wpc-no-results">' . esc_html( __( 'No results found.', 'wordpress-copilot' ) ) . '</p>',
-				'summary' => $explanation . ' — ' . __( 'No results found.', 'wordpress-copilot' ),
+				'html'    => '<p class="wpc-no-results">' . esc_html( __( 'No results found.', 'data-query-assistant' ) ) . '</p>',
+				'summary' => $explanation . ' — ' . __( 'No results found.', 'data-query-assistant' ),
 				'count'   => 0,
 			];
 		}
@@ -283,7 +308,7 @@ class WPC_Query_Executor {
 		$limited  = $count >= $max_rows
 			? ' <span class="wpc-limit-note">' . sprintf(
 				/* translators: %d: maximum number of rows */
-				__( '(limited to %d rows)', 'wordpress-copilot' ),
+				__( '(limited to %d rows)', 'data-query-assistant' ),
 				$max_rows
 			) . '</span>'
 			: '';
