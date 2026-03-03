@@ -37,8 +37,8 @@
   to { --wpc-siri-angle: 360deg; }
 }
 @keyframes wpc-siri-pulse {
-  0%, 100% { transform: scale(1);    box-shadow: 0 0 18px 4px rgba(124,111,255,.5), 0 0 36px 10px rgba(56,189,248,.2); }
-  50%       { transform: scale(1.06); box-shadow: 0 0 28px 8px rgba(124,111,255,.7), 0 0 56px 14px rgba(56,189,248,.3); }
+  0%, 100% { transform: scale(1);    box-shadow: 0 0 16px 3px rgba(124,111,255,.45); }
+  50%       { transform: scale(1.05); box-shadow: 0 0 22px 6px rgba(124,111,255,.6);  }
 }
 @keyframes wpc-siri-blob1 {
   0%,100% { transform: translate(-20%,-20%) scale(1.1); }
@@ -89,25 +89,25 @@
 .wpc-siri-blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(8px);
   opacity: 0.55;
+  will-change: transform;
 }
 .wpc-siri-blob-1 {
-  width: 75%; height: 75%;
-  top: 0; left: 0;
-  background: radial-gradient(circle at 40% 40%, #7c6fff, #a78bfa 60%, transparent 100%);
+  width: 90%; height: 90%;
+  top: -5%; left: -5%;
+  background: radial-gradient(circle at 40% 40%, #7c6fff 0%, #a78bfa 30%, transparent 65%);
   animation: wpc-siri-blob1 5s ease-in-out infinite;
 }
 .wpc-siri-blob-2 {
-  width: 65%; height: 65%;
-  bottom: 0; right: 0;
-  background: radial-gradient(circle at 60% 60%, #38bdf8, #818cf8 60%, transparent 100%);
+  width: 80%; height: 80%;
+  bottom: -5%; right: -5%;
+  background: radial-gradient(circle at 60% 60%, #38bdf8 0%, #818cf8 30%, transparent 65%);
   animation: wpc-siri-blob2 7s ease-in-out infinite;
 }
 .wpc-siri-blob-3 {
-  width: 55%; height: 55%;
-  top: 25%; left: 22%;
-  background: radial-gradient(circle at 50% 50%, #e879f9, #a78bfa 60%, transparent 100%);
+  width: 70%; height: 70%;
+  top: 18%; left: 15%;
+  background: radial-gradient(circle at 50% 50%, #e879f9 0%, #a78bfa 30%, transparent 65%);
   animation: wpc-siri-blob3 4s ease-in-out infinite;
 }
 .wpc-siri-icon {
@@ -129,7 +129,8 @@
 
 /* ── Panel ────────────────────────────────────────────────────── */
 #wpc-panel {
-  display: none;
+  display: flex;
+  flex-direction: column;
   position: absolute;
   bottom: calc(100% + 12px);
   right: 0;
@@ -140,8 +141,19 @@
   box-shadow: var(--wpc-shadow);
   border: 1px solid var(--wpc-border);
   overflow: hidden;
-  flex-direction: column;
-  display: flex; /* always flex, JS uses slideDown so height animates */
+  /* Hidden by default — JS adds .is-open on trigger click */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(10px) scale(0.98);
+  transition: opacity .22s ease, transform .22s ease, visibility 0s linear .22s;
+}
+#wpc-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition: opacity .22s ease, transform .22s ease, visibility 0s linear 0s;
 }
 .wpc-layout {
   display: grid;

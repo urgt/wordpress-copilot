@@ -72,7 +72,7 @@
     });
 
     $(document).on('keydown', function (e) {
-      if (e.key === 'Escape' && $panel.is(':visible')) closePanel();
+      if (e.key === 'Escape' && $panel.hasClass('is-open')) closePanel();
     });
 
     // +N more tags toggle (delegated)
@@ -115,16 +115,16 @@
     });
   }
 
-  function togglePanel() { $panel.is(':visible') ? closePanel() : openPanel(); }
+  function togglePanel() { $panel.hasClass('is-open') ? closePanel() : openPanel(); }
   function openPanel() {
-    $panel.stop(true).slideDown(180);
+    $panel.addClass('is-open');
     $trigger.addClass('active').attr('aria-expanded', 'true');
     $input.focus();
     maybeShowOnboarding();
   }
   function closePanel() {
     if ($panel.hasClass('wpc-is-fullscreen')) toggleFullscreen();
-    $panel.stop(true).slideUp(180);
+    $panel.removeClass('is-open');
     $trigger.removeClass('active').attr('aria-expanded', 'false');
   }
   function toggleFullscreen() {
