@@ -178,65 +178,65 @@ class WPC_Chat_Widget {
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div id="wpc-onboarding" style="display:none" role="dialog" aria-modal="true">
-                <div class="wpc-ob-card">
-                    <div class="wpc-ob-dots">
-                        <span class="wpc-ob-dot active" data-slide="0"></span>
-                        <span class="wpc-ob-dot" data-slide="1"></span>
-                        <span class="wpc-ob-dot" data-slide="2"></span>
-                        <span class="wpc-ob-dot" data-slide="3"></span>
-                    </div>
-
-                    <div class="wpc-ob-slide active" data-slide="0">
-                        <div class="wpc-ob-emoji">✨</div>
-                        <h2><?php esc_html_e( 'Meet WordPress Copilot', 'wordpress-copilot' ); ?></h2>
-                        <p><?php esc_html_e( 'Ask questions about your WordPress data in plain English — no SQL knowledge needed.', 'wordpress-copilot' ); ?></p>
-                        <p class="wpc-ob-sub"><?php esc_html_e( 'Powered by AI. Runs only on your WordPress admin.', 'wordpress-copilot' ); ?></p>
-                    </div>
-
-                    <div class="wpc-ob-slide" data-slide="1">
-                        <div class="wpc-ob-emoji">⚙️</div>
-                        <h2><?php esc_html_e( 'How it works', 'wordpress-copilot' ); ?></h2>
-                        <ol class="wpc-ob-steps">
-                            <li><strong><?php esc_html_e( 'You ask', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'a question in plain language', 'wordpress-copilot' ); ?></li>
-                            <li><strong><?php esc_html_e( 'AI generates', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'a safe SQL SELECT query', 'wordpress-copilot' ); ?></li>
-                            <li><strong><?php esc_html_e( 'WordPress runs', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'the query on your database', 'wordpress-copilot' ); ?></li>
-                            <li><strong><?php esc_html_e( 'Results shown', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'as a table or chart', 'wordpress-copilot' ); ?></li>
-                        </ol>
-                    </div>
-
-                    <div class="wpc-ob-slide" data-slide="2">
-                        <div class="wpc-ob-emoji">🔒</div>
-                        <h2><?php esc_html_e( 'Is it safe?', 'wordpress-copilot' ); ?></h2>
-                        <ul class="wpc-ob-safety">
-                            <li>✅ <strong><?php esc_html_e( 'Read-only', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'only SELECT queries run', 'wordpress-copilot' ); ?></li>
-                            <li>✅ <strong><?php esc_html_e( 'Admin only', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'requires WordPress admin access', 'wordpress-copilot' ); ?></li>
-                            <li>✅ <strong><?php esc_html_e( 'Your data stays private', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'only schema structure is sent to AI, not actual data values', 'wordpress-copilot' ); ?></li>
-                            <li>✅ <strong><?php esc_html_e( 'Validated', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'all queries are checked before execution', 'wordpress-copilot' ); ?></li>
-                        </ul>
-                    </div>
-
-                    <div class="wpc-ob-slide" data-slide="3">
-                        <div class="wpc-ob-emoji">💡</div>
-                        <h2><?php esc_html_e( 'Try these examples', 'wordpress-copilot' ); ?></h2>
-                        <div class="wpc-ob-examples">
-                            <button class="wpc-ob-example" data-query="Show me the 10 most recent posts with their authors">📝 <?php esc_html_e( 'Recent posts with authors', 'wordpress-copilot' ); ?></button>
-                            <button class="wpc-ob-example" data-query="How many users registered each month this year?">👥 <?php esc_html_e( 'User registrations by month', 'wordpress-copilot' ); ?></button>
-                            <button class="wpc-ob-example" data-query="What are the top 5 most commented posts?">💬 <?php esc_html_e( 'Top commented posts', 'wordpress-copilot' ); ?></button>
-                            <button class="wpc-ob-example" data-query="Show me all products with stock less than 5">📦 <?php esc_html_e( 'Low stock products', 'wordpress-copilot' ); ?></button>
-                            <button class="wpc-ob-example" data-query="Count posts by category">📂 <?php esc_html_e( 'Posts by category', 'wordpress-copilot' ); ?></button>
-                            <button class="wpc-ob-example" data-query="Show me orders placed today">🛒 <?php esc_html_e( "Today's orders", 'wordpress-copilot' ); ?></button>
+                <div id="wpc-onboarding" style="display:none" role="dialog" aria-modal="true">
+                    <div class="wpc-ob-card">
+                        <div class="wpc-ob-dots">
+                            <span class="wpc-ob-dot active" data-slide="0"></span>
+                            <span class="wpc-ob-dot" data-slide="1"></span>
+                            <span class="wpc-ob-dot" data-slide="2"></span>
+                            <span class="wpc-ob-dot" data-slide="3"></span>
                         </div>
-                    </div>
 
-                    <div class="wpc-ob-nav">
-                        <button class="wpc-ob-skip" id="wpc-ob-skip"><?php esc_html_e( 'Skip', 'wordpress-copilot' ); ?></button>
-                        <div class="wpc-ob-nav-right">
-                            <button class="wpc-ob-prev" id="wpc-ob-prev" style="display:none">← <?php esc_html_e( 'Back', 'wordpress-copilot' ); ?></button>
-                            <button class="wpc-ob-next" id="wpc-ob-next"><?php esc_html_e( 'Next', 'wordpress-copilot' ); ?> →</button>
-                            <button class="wpc-ob-finish" id="wpc-ob-finish" style="display:none"><?php esc_html_e( "Let's go!", 'wordpress-copilot' ); ?> 🚀</button>
+                        <div class="wpc-ob-slide active" data-slide="0">
+                            <div class="wpc-ob-emoji">✨</div>
+                            <h2><?php esc_html_e( 'Meet WordPress Copilot', 'wordpress-copilot' ); ?></h2>
+                            <p><?php esc_html_e( 'Ask questions about your WordPress data in your native language — no SQL knowledge needed.', 'wordpress-copilot' ); ?></p>
+                            <p class="wpc-ob-sub"><?php esc_html_e( 'Powered by AI. Runs only on your WordPress admin.', 'wordpress-copilot' ); ?></p>
+                        </div>
+
+                        <div class="wpc-ob-slide" data-slide="1">
+                            <div class="wpc-ob-emoji">⚙️</div>
+                            <h2><?php esc_html_e( 'How it works', 'wordpress-copilot' ); ?></h2>
+                            <ol class="wpc-ob-steps">
+                                <li><strong><?php esc_html_e( 'You ask', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'a question in plain language', 'wordpress-copilot' ); ?></li>
+                                <li><strong><?php esc_html_e( 'AI generates', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'a safe SQL SELECT query', 'wordpress-copilot' ); ?></li>
+                                <li><strong><?php esc_html_e( 'WordPress runs', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'the query on your database', 'wordpress-copilot' ); ?></li>
+                                <li><strong><?php esc_html_e( 'Results shown', 'wordpress-copilot' ); ?></strong> <?php esc_html_e( 'as a table or chart', 'wordpress-copilot' ); ?></li>
+                            </ol>
+                        </div>
+
+                        <div class="wpc-ob-slide" data-slide="2">
+                            <div class="wpc-ob-emoji">🔒</div>
+                            <h2><?php esc_html_e( 'Is it safe?', 'wordpress-copilot' ); ?></h2>
+                            <ul class="wpc-ob-safety">
+                                <li>✅ <strong><?php esc_html_e( 'Read-only', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'only SELECT queries run', 'wordpress-copilot' ); ?></li>
+                                <li>✅ <strong><?php esc_html_e( 'Admin only', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'requires WordPress admin access', 'wordpress-copilot' ); ?></li>
+                                <li>✅ <strong><?php esc_html_e( 'Your data stays private', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'only schema structure is sent to AI, not actual data values', 'wordpress-copilot' ); ?></li>
+                                <li>✅ <strong><?php esc_html_e( 'Validated', 'wordpress-copilot' ); ?></strong> — <?php esc_html_e( 'all queries are checked before execution', 'wordpress-copilot' ); ?></li>
+                            </ul>
+                        </div>
+
+                        <div class="wpc-ob-slide" data-slide="3">
+                            <div class="wpc-ob-emoji">💡</div>
+                            <h2><?php esc_html_e( 'Try these examples', 'wordpress-copilot' ); ?></h2>
+                            <div class="wpc-ob-examples">
+                                <button class="wpc-ob-example" data-query="Show me the 10 most recent posts with their authors">📝 <?php esc_html_e( 'Recent posts with authors', 'wordpress-copilot' ); ?></button>
+                                <button class="wpc-ob-example" data-query="How many users registered each month this year?">👥 <?php esc_html_e( 'User registrations by month', 'wordpress-copilot' ); ?></button>
+                                <button class="wpc-ob-example" data-query="What are the top 5 most commented posts?">💬 <?php esc_html_e( 'Top commented posts', 'wordpress-copilot' ); ?></button>
+                                <button class="wpc-ob-example" data-query="Show me all products with stock less than 5">📦 <?php esc_html_e( 'Low stock products', 'wordpress-copilot' ); ?></button>
+                                <button class="wpc-ob-example" data-query="Count posts by category">📂 <?php esc_html_e( 'Posts by category', 'wordpress-copilot' ); ?></button>
+                                <button class="wpc-ob-example" data-query="Show me orders placed today">🛒 <?php esc_html_e( "Today's orders", 'wordpress-copilot' ); ?></button>
+                            </div>
+                        </div>
+
+                        <div class="wpc-ob-nav">
+                            <button class="wpc-ob-skip" id="wpc-ob-skip"><?php esc_html_e( 'Skip', 'wordpress-copilot' ); ?></button>
+                            <div class="wpc-ob-nav-right">
+                                <button class="wpc-ob-prev" id="wpc-ob-prev" style="display:none">← <?php esc_html_e( 'Back', 'wordpress-copilot' ); ?></button>
+                                <button class="wpc-ob-next" id="wpc-ob-next"><?php esc_html_e( 'Next', 'wordpress-copilot' ); ?> →</button>
+                                <button class="wpc-ob-finish" id="wpc-ob-finish" style="display:none"><?php esc_html_e( "Let's go!", 'wordpress-copilot' ); ?> 🚀</button>
+                            </div>
                         </div>
                     </div>
                 </div>

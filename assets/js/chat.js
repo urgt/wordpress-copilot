@@ -138,7 +138,7 @@
   /* ── Onboarding ─────────────────────────────────────────────── */
   function maybeShowOnboarding() {
     if (localStorage.getItem('wpc_onboarded_v1')) return;
-    $('#wpc-onboarding').fadeIn(200);
+    $('#wpc-onboarding').css('display', 'flex').hide().fadeIn(200);
     currentSlide = 0;
     renderOnboarding();
   }
