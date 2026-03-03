@@ -36,8 +36,8 @@
   to { --wpc-siri-angle: 360deg; }
 }
 @keyframes wpc-siri-glow {
-  0%, 100% { box-shadow: 0 0 18px 2px rgba(124,111,255,.30), 0 0 40px 6px rgba(124,111,255,.08); }
-  50%      { box-shadow: 0 0 24px 5px rgba(124,111,255,.45), 0 0 50px 10px rgba(124,111,255,.12); }
+  0%, 100% { box-shadow: 0 0 20px 3px rgba(124,111,255,.40), 0 0 44px 8px rgba(124,111,255,.12); }
+  50%      { box-shadow: 0 0 30px 8px rgba(124,111,255,.60), 0 0 60px 14px rgba(124,111,255,.18); }
 }
 @keyframes wpc-siri-blob1 {
   0%,100% { transform: translate(-12%,-12%) scale(1.05); }
@@ -67,10 +67,9 @@
     linear-gradient(var(--wpc-bg), var(--wpc-bg)) padding-box,
     conic-gradient(
       from var(--wpc-siri-angle),
-      var(--wpc-accent) 0%, #a78bfa 25%, #818cf8 50%, var(--wpc-accent2) 75%, var(--wpc-accent) 100%
+      var(--wpc-accent) 0%, #c4b5fd 20%, #818cf8 40%, #e879f9 60%, var(--wpc-accent2) 80%, var(--wpc-accent) 100%
     ) border-box;
   animation: wpc-siri-spin 6s linear infinite, wpc-siri-glow 4s ease-in-out infinite;
-  transition: border-width .2s;
 }
 .wpc-siri-orb {
   position: absolute;
@@ -82,25 +81,25 @@
 .wpc-siri-blob {
   position: absolute;
   border-radius: 50%;
-  opacity: 0.35;
+  opacity: 0.55;
   will-change: transform;
 }
 .wpc-siri-blob-1 {
   width: 100%; height: 100%;
   top: -8%; left: -8%;
-  background: radial-gradient(circle at 38% 38%, var(--wpc-accent) 0%, transparent 58%);
+  background: radial-gradient(circle at 38% 38%, var(--wpc-accent) 0%, rgba(167,139,250,.3) 40%, transparent 62%);
   animation: wpc-siri-blob1 6s ease-in-out infinite;
 }
 .wpc-siri-blob-2 {
   width: 85%; height: 85%;
   bottom: -8%; right: -8%;
-  background: radial-gradient(circle at 62% 62%, #818cf8 0%, transparent 58%);
+  background: radial-gradient(circle at 62% 62%, #818cf8 0%, rgba(232,121,249,.25) 40%, transparent 62%);
   animation: wpc-siri-blob2 8s ease-in-out infinite;
 }
 .wpc-siri-blob-3 {
   width: 70%; height: 70%;
   top: 16%; left: 16%;
-  background: radial-gradient(circle at 50% 50%, #a78bfa 0%, transparent 58%);
+  background: radial-gradient(circle at 50% 50%, #c4b5fd 0%, rgba(124,111,255,.3) 40%, transparent 62%);
   animation: wpc-siri-blob3 5s ease-in-out infinite;
 }
 .wpc-siri-icon {
@@ -111,12 +110,11 @@
   flex-shrink: 0;
 }
 #wpc-trigger:hover {
-  animation: wpc-siri-spin 4s linear infinite, wpc-siri-glow 2s ease-in-out infinite;
+  animation-duration: 4s, 2s;
 }
 #wpc-trigger.active,
 #wpc-trigger[aria-expanded="true"] {
-  animation: wpc-siri-spin 3s linear infinite, wpc-siri-glow 1.5s ease-in-out infinite;
-  border-width: 3px;
+  animation-duration: 3s, 1.5s;
 }
 
 /* ── Panel ────────────────────────────────────────────────────── */
@@ -842,13 +840,13 @@ details[open] .wpc-cell-json-summary::before { content: '▼'; }
   z-index: 999999;
   display: flex !important;
   flex-direction: column;
-  overflow: visible;
+  overflow: hidden;
 }
 #wpc-panel.wpc-is-fullscreen .wpc-layout {
   min-height: 0;
   flex: 1;
   overflow: hidden;
-  height: 100%; /* fill remaining height after header */
+  height: 100%;
 }
 #wpc-panel.wpc-is-fullscreen .wpc-sidebar {
   overflow-y: auto;
@@ -856,6 +854,7 @@ details[open] .wpc-cell-json-summary::before { content: '▼'; }
 #wpc-panel.wpc-is-fullscreen .wpc-main {
   min-height: 0;
   height: 100%;
+  overflow: hidden;
 }
 #wpc-panel.wpc-is-fullscreen #wpc-messages {
   flex: 1;
