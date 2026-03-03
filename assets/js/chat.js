@@ -13,6 +13,8 @@
   let currentSSE = null;
   let chats = [];
   let activeChatId = null;
+  let currentSlide = 0;
+  const TOTAL_SLIDES = 4;
 
   const $trigger = $('#wpc-trigger');
   const $panel = $('#wpc-panel');
@@ -96,13 +98,34 @@
       if (!window.confirm(cfg.i18n.confirmDeleteChat || 'Delete this chat?')) return;
       deleteChat(id);
     });
+
+    // Onboarding events
+    $('#wpc-ob-next').on('click', function () {
+      if (currentSlide < TOTAL_SLIDES - 1) { currentSlide++; renderOnboarding(); }
+    });
+    $('#wpc-ob-prev').on('click', function () {
+      if (currentSlide > 0) { currentSlide--; renderOnboarding(); }
+    });
+    $('#wpc-ob-skip').on('click', finishOnboarding);
+    $('#wpc-ob-finish').on('click', finishOnboarding);
+    $(document).on('click', '.wpc-ob-example', function () {
+      var query = String($(this).data('query') || '');
+      finishOnboarding();
+      if (query) { $input.val(query).focus(); }
+    });
   }
 
   function togglePanel() { $panel.is(':visible') ? closePanel() : openPanel(); }
-  function openPanel() { $panel.stop(true).slideDown(180); $trigger.addClass('active'); $input.focus(); }
+  function openPanel() {
+    $panel.stop(true).slideDown(180);
+    $trigger.addClass('active').attr('aria-expanded', 'true');
+    $input.focus();
+    maybeShowOnboarding();
+  }
   function closePanel() {
     if ($panel.hasClass('wpc-is-fullscreen')) toggleFullscreen();
-    $panel.stop(true).slideUp(180); $trigger.removeClass('active');
+    $panel.stop(true).slideUp(180);
+    $trigger.removeClass('active').attr('aria-expanded', 'false');
   }
   function toggleFullscreen() {
     const on = $panel.toggleClass('wpc-is-fullscreen').hasClass('wpc-is-fullscreen');
@@ -110,6 +133,29 @@
     $fullscreen.find('.wpc-fs-collapse').toggle(on);
     $fullscreen.attr('title', on ? 'Exit fullscreen' : 'Fullscreen');
     scrollBottom();
+  }
+
+  /* ── Onboarding ─────────────────────────────────────────────── */
+  function maybeShowOnboarding() {
+    if (localStorage.getItem('wpc_onboarded_v1')) return;
+    $('#wpc-onboarding').fadeIn(200);
+    currentSlide = 0;
+    renderOnboarding();
+  }
+
+  function renderOnboarding() {
+    $('.wpc-ob-slide').removeClass('active');
+    $('.wpc-ob-slide[data-slide="' + currentSlide + '"]').addClass('active');
+    $('.wpc-ob-dot').removeClass('active');
+    $('.wpc-ob-dot[data-slide="' + currentSlide + '"]').addClass('active');
+    $('#wpc-ob-prev').toggle(currentSlide > 0);
+    $('#wpc-ob-next').toggle(currentSlide < TOTAL_SLIDES - 1);
+    $('#wpc-ob-finish').toggle(currentSlide === TOTAL_SLIDES - 1);
+  }
+
+  function finishOnboarding() {
+    localStorage.setItem('wpc_onboarded_v1', '1');
+    $('#wpc-onboarding').fadeOut(200);
   }
 
   function initChats() {
