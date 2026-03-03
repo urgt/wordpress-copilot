@@ -71,6 +71,10 @@
     <!-- PHP version requirement -->
     <config name="testVersion" value="8.0-"/>
 
-    <!-- Allow short array syntax (plugin requires PHP 8.0) -->
+    <!-- Allow short array syntax (plugin requires PHP 8.0+).
+         Exclude the WP Universal ruleset that enforces long array() syntax — they conflict. -->
     <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+    <rule ref="WordPress">
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+    </rule>
 </ruleset>

@@ -4,6 +4,8 @@
  *
  * Fires when the plugin is deleted via the WordPress admin.
  * Removes all plugin data: database tables and options.
+ *
+ * @package WordPress_Copilot
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;

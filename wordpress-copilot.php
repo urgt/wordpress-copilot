@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Plugin Name:  WordPress Copilot
  * Plugin URI:   https://github.com/urgt/wordpress-copilot
@@ -11,14 +10,16 @@
  * License:      GPL-2.0+
  * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:  wordpress-copilot
+ *
+ * @package WordPress_Copilot
  */
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WPC_VERSION',  '1.0.0' );
-define( 'WPC_PATH',     plugin_dir_path( __FILE__ ) );
-define( 'WPC_URL',      plugin_dir_url( __FILE__ ) );
-define( 'WPC_TIMEOUT',  90 );
+define( 'WPC_VERSION', '1.0.0' );
+define( 'WPC_PATH', plugin_dir_path( __FILE__ ) );
+define( 'WPC_URL', plugin_dir_url( __FILE__ ) );
+define( 'WPC_TIMEOUT', 90 );
 
 /* ── Autoload ────────────────────────────────────────────────────── */
 require_once WPC_PATH . 'includes/class-logger.php';
@@ -34,31 +35,43 @@ require_once WPC_PATH . 'includes/class-chat-storage.php';
 require_once WPC_PATH . 'includes/class-chat-widget.php';
 
 /* ── Bootstrap ───────────────────────────────────────────────────── */
-add_action( 'plugins_loaded', function () {
-    WPC_Settings::init();
-    WPC_Chat_Storage::register_ajax();
-    WPC_Chat_Widget::init();
+add_action(
+	'plugins_loaded',
+	function () {
+		WPC_Settings::init();
+		WPC_Chat_Storage::register_ajax();
+		WPC_Chat_Widget::init();
 
-    // Suppress WP DB error output for AJAX requests — nonce is verified in each handler.
+		// Suppress WP DB error output for AJAX requests — nonce is verified in each handler.
     // phpcs:ignore WordPress.Security.NonceVerification.Missing
-    if ( wp_doing_ajax() && in_array( $_POST['action'] ?? '', [ 'wpc_query', 'wpc_stream' ], true ) ) {
-        ob_start();
-        add_action( 'shutdown', function () {
-            ob_start( function ( $output ) {
-                return preg_replace( '/<div id="error"><p class="wpdberror">.*?<\/div>/s', '', $output );
-            } );
-        }, 5 );
-    }
-} );
+		if ( wp_doing_ajax() && in_array( $_POST['action'] ?? '', [ 'wpc_query', 'wpc_stream' ], true ) ) {
+			ob_start();
+			add_action(
+				'shutdown',
+				function () {
+					ob_start(
+						function ( $output ) {
+							return preg_replace( '/<div id="error"><p class="wpdberror">.*?<\/div>/s', '', $output );
+						}
+					);
+				},
+				5
+			);
+		}
+	}
+);
 
 /* ── Activation: create logs table ──────────────────────────────── */
-register_activation_hook( __FILE__, function () {
-    global $wpdb;
-    $charset = $wpdb->get_charset_collate();
-    require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+register_activation_hook(
+	__FILE__,
+	function () {
+		global $wpdb;
+		$charset = $wpdb->get_charset_collate();
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-    $table = $wpdb->prefix . 'copilot_logs';
-    dbDelta( "CREATE TABLE IF NOT EXISTS {$table} (
+		$table = $wpdb->prefix . 'copilot_logs';
+		dbDelta(
+			"CREATE TABLE IF NOT EXISTS {$table} (
         id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
         user_id        BIGINT UNSIGNED NOT NULL,
         user_query     TEXT            NOT NULL,
@@ -75,12 +88,17 @@ register_activation_hook( __FILE__, function () {
         PRIMARY KEY (id),
         KEY user_id (user_id),
         KEY executed_at (executed_at)
-    ) {$charset};" );
+    ) {$charset};"
+		);
 
-    WPC_Chat_Storage::create_table();
-    WPC_DB_Schema::flush_cache();
-} );
+		WPC_Chat_Storage::create_table();
+		WPC_DB_Schema::flush_cache();
+	}
+);
 
-register_deactivation_hook( __FILE__, function () {
-    WPC_DB_Schema::flush_cache();
-} );
+register_deactivation_hook(
+	__FILE__,
+	function () {
+		WPC_DB_Schema::flush_cache();
+	}
+);
