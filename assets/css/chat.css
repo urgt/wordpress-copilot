@@ -826,6 +826,11 @@ details[open] .wpc-cell-json-summary::before { content: '▼'; }
 
 
 /* ── Fullscreen mode ─────────────────────────────────────────── */
+html.wpc-no-scroll,
+body.wpc-no-scroll {
+  overflow: hidden !important;
+  height: 100vh !important;
+}
 #wpc-panel.wpc-is-fullscreen {
   position: fixed;
   inset: 0;
@@ -860,7 +865,11 @@ details[open] .wpc-cell-json-summary::before { content: '▼'; }
   max-height: none;
   overflow-y: auto;
   overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--wpc-accent) transparent;
 }
+#wpc-panel.wpc-is-fullscreen #wpc-messages::-webkit-scrollbar       { width: 6px; }
+#wpc-panel.wpc-is-fullscreen #wpc-messages::-webkit-scrollbar-thumb { background: var(--wpc-accent); border-radius: 4px; }
 
 /* ── Onboarding overlay (inside #wpc-panel) ──────────────────── */
 #wpc-onboarding {

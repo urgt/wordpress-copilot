@@ -132,6 +132,7 @@
     $fullscreen.find('.wpc-fs-expand').toggle(!on);
     $fullscreen.find('.wpc-fs-collapse').toggle(on);
     $fullscreen.attr('title', on ? 'Exit fullscreen' : 'Fullscreen');
+    $('html, body').toggleClass('wpc-no-scroll', on);
     scrollBottom();
   }
 
