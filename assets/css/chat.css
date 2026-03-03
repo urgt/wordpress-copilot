@@ -109,9 +109,6 @@
   filter: drop-shadow(0 0 3px rgba(124,111,255,.5));
   flex-shrink: 0;
 }
-#wpc-trigger:hover {
-  animation-duration: 4s, 2s;
-}
 #wpc-trigger.active,
 #wpc-trigger[aria-expanded="true"] {
   animation-duration: 3s, 1.5s;
@@ -421,6 +418,7 @@
   min-height: 340px;
   max-height: 470px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: var(--wpc-accent) transparent;
   flex: 1;
@@ -861,6 +859,7 @@ details[open] .wpc-cell-json-summary::before { content: '▼'; }
   min-height: 0;
   max-height: none;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* ── Onboarding overlay (inside #wpc-panel) ──────────────────── */
