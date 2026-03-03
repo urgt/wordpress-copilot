@@ -14,7 +14,7 @@
   let chats = [];
   let activeChatId = null;
   let currentSlide = 0;
-  const TOTAL_SLIDES = 4;
+  const TOTAL_SLIDES = 5;
 
   const $trigger = $('#wpc-trigger');
   const $panel = $('#wpc-panel');
@@ -138,7 +138,7 @@
 
   /* ── Onboarding ─────────────────────────────────────────────── */
   function maybeShowOnboarding() {
-    if (localStorage.getItem('wpc_onboarded_v1')) return;
+    if (localStorage.getItem('wpc_onboarded_v2')) return;
     $('#wpc-onboarding').css('display', 'flex').hide().fadeIn(200);
     currentSlide = 0;
     renderOnboarding();
@@ -155,7 +155,7 @@
   }
 
   function finishOnboarding() {
-    localStorage.setItem('wpc_onboarded_v1', '1');
+    localStorage.setItem('wpc_onboarded_v2', '1');
     $('#wpc-onboarding').fadeOut(200);
   }
 
@@ -457,7 +457,9 @@
 
     if (event.type === 'error') {
       $bot.find('.wpc-status, .wpc-stream-preview').remove();
-      if (event.sql && cfg.showSql) {
+      if ('no_api_key' === (event.code || '')) {
+        showNoApiKeyNotice($bot, query);
+      } else if (event.sql && cfg.showSql) {
         handleBotError($bot, String(event.data || ''), query, event.sql);
       } else {
         handleBotError($bot, String(event.data || ''), query);
@@ -493,7 +495,12 @@
           saveBotSuccess(query, res.data);
         } else {
           const message = ((res.data || {}).message) || (cfg.i18n.error || 'Something went wrong. Please try again.');
-          handleBotError($bot, message, query, res.data && res.data.sql ? res.data.sql : '');
+          const code    = (res.data || {}).code || '';
+          if ('no_api_key' === code) {
+            showNoApiKeyNotice($bot, query);
+          } else {
+            handleBotError($bot, message, query, res.data && res.data.sql ? res.data.sql : '');
+          }
         }
       })
       .fail(function (xhr) {
@@ -528,6 +535,22 @@
     if (sql && cfg.showSql) appendSqlBlock($bot, sql);
     appendActions($bot);
     saveBotError(query, message, sql || '');
+  }
+
+  function showNoApiKeyNotice($bot, query) {
+    const settingsUrl = cfg.settingsUrl || '#';
+    const title   = cfg.i18n.noApiKey    || 'API key not configured';
+    const msg     = cfg.i18n.noApiKeyMsg || 'Add your AI provider API key in plugin settings to start using WordPress Copilot.';
+    const btnText = cfg.i18n.goToSettings || 'Open Settings';
+    $bot.html(
+      '<div class="wpc-no-api-key">' +
+        '<div class="wpc-no-api-key__icon">🔑</div>' +
+        '<h3 class="wpc-no-api-key__title">' + escHtml(title) + '</h3>' +
+        '<p class="wpc-no-api-key__msg">' + escHtml(msg) + '</p>' +
+        '<a href="' + escHtml(settingsUrl) + '" class="wpc-no-api-key__btn">' + escHtml(btnText) + ' →</a>' +
+      '</div>'
+    );
+    saveBotError(query, title, '');
   }
 
   function saveBotError(query, message, sql) {

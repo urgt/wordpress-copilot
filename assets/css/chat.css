@@ -485,6 +485,50 @@
   color: #ff6b7a;
 }
 
+/* No API key notice */
+.wpc-no-api-key {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 20px 16px;
+  background: linear-gradient(135deg, rgba(124,111,255,.08), rgba(232,121,249,.06));
+  border: 1px solid rgba(124,111,255,.25);
+  border-radius: 14px;
+}
+.wpc-no-api-key__icon {
+  font-size: 32px;
+  line-height: 1;
+}
+.wpc-no-api-key__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--wpc-text);
+}
+.wpc-no-api-key__msg {
+  margin: 0;
+  font-size: 13px;
+  color: var(--wpc-muted);
+  line-height: 1.5;
+}
+.wpc-no-api-key__btn {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 8px 20px;
+  background: var(--wpc-accent);
+  color: #fff !important;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: background .2s;
+}
+.wpc-no-api-key__btn:hover {
+  background: var(--wpc-accent2);
+}
+
 /* Status line (streaming) */
 .wpc-status {
   color: var(--wpc-muted);
@@ -1067,6 +1111,34 @@ body.wpc-no-scroll {
   transition: opacity .15s, transform .15s;
 }
 .wpc-ob-finish:hover { opacity: .88; transform: translateY(-1px); }
+
+/* Onboarding: API key slide */
+.wpc-ob-api-step {
+  font-size: 13px;
+  color: var(--wpc-text);
+  padding: 7px 10px;
+  background: rgba(124,111,255,.07);
+  border-radius: 8px;
+  border-left: 2px solid var(--wpc-accent);
+  text-align: left;
+  line-height: 1.4;
+}
+.wpc-ob-settings-btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 9px 22px;
+  background: var(--wpc-accent);
+  color: #fff !important;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none !important;
+  transition: background .2s, transform .15s;
+}
+.wpc-ob-settings-btn:hover {
+  background: var(--wpc-accent2);
+  transform: translateY(-1px);
+}
 
 /* ── Responsive ───────────────────────────────────────────────── */
 @media (max-width:530px) {

@@ -69,6 +69,8 @@ class WPC_Chat_Widget {
             'providerLabel' => $provider_label,
             'modelOptions' => $model_options,
             'model'       => $model,
+            'settingsUrl' => admin_url( 'options-general.php?page=wordpress-copilot' ),
+            'hasApiKey'   => ! empty( WPC_Settings::get( 'api_key' ) ),
             'i18n'        => [
                 'placeholder' => __( 'Ask anything about your data…', 'wordpress-copilot' ),
                 'thinking'    => __( 'Generating SQL query…', 'wordpress-copilot' ),
@@ -83,6 +85,9 @@ class WPC_Chat_Widget {
                 'emptyChat'   => __( 'Start a new conversation to keep context.', 'wordpress-copilot' ),
                 'voiceStart'  => __( 'Listening… speak now', 'wordpress-copilot' ),
                 'noVoice'     => __( 'Voice input is not supported in this browser.', 'wordpress-copilot' ),
+                'noApiKey'    => __( 'API key not configured', 'wordpress-copilot' ),
+                'noApiKeyMsg' => __( 'To use WordPress Copilot, add your AI provider API key in plugin settings.', 'wordpress-copilot' ),
+                'goToSettings' => __( 'Open Settings', 'wordpress-copilot' ),
                 'examples'    => [
                     __( '🛒 Top 10 best-selling products this month', 'wordpress-copilot' ),
                     __( '📦 Products with stock below 5 units', 'wordpress-copilot' ),
@@ -186,6 +191,7 @@ class WPC_Chat_Widget {
                             <span class="wpc-ob-dot" data-slide="1"></span>
                             <span class="wpc-ob-dot" data-slide="2"></span>
                             <span class="wpc-ob-dot" data-slide="3"></span>
+                            <span class="wpc-ob-dot" data-slide="4"></span>
                         </div>
 
                         <div class="wpc-ob-slide active" data-slide="0">
@@ -196,6 +202,24 @@ class WPC_Chat_Widget {
                         </div>
 
                         <div class="wpc-ob-slide" data-slide="1">
+                            <div class="wpc-ob-emoji">🔑</div>
+                            <h2><?php esc_html_e( 'Add your API key', 'wordpress-copilot' ); ?></h2>
+                            <p><?php esc_html_e( 'WordPress Copilot uses an AI provider to generate queries. An API key is required — without it, nothing will work.', 'wordpress-copilot' ); ?></p>
+                            <div class="wpc-ob-steps">
+                                <div class="wpc-ob-api-step">
+                                    <strong>1.</strong> <?php esc_html_e( 'Choose a provider: Anthropic, OpenAI, or Google', 'wordpress-copilot' ); ?>
+                                </div>
+                                <div class="wpc-ob-api-step">
+                                    <strong>2.</strong> <?php esc_html_e( 'Get an API key from your provider\'s dashboard', 'wordpress-copilot' ); ?>
+                                </div>
+                                <div class="wpc-ob-api-step">
+                                    <strong>3.</strong> <?php esc_html_e( 'Paste it in plugin settings', 'wordpress-copilot' ); ?>
+                                </div>
+                            </div>
+                            <a href="<?php echo esc_url( admin_url( 'options-general.php?page=wordpress-copilot' ) ); ?>" class="wpc-ob-settings-btn"><?php esc_html_e( 'Open Settings', 'wordpress-copilot' ); ?> →</a>
+                        </div>
+
+                        <div class="wpc-ob-slide" data-slide="2">
                             <div class="wpc-ob-emoji">⚙️</div>
                             <h2><?php esc_html_e( 'How it works', 'wordpress-copilot' ); ?></h2>
                             <ol class="wpc-ob-steps">
@@ -206,7 +230,7 @@ class WPC_Chat_Widget {
                             </ol>
                         </div>
 
-                        <div class="wpc-ob-slide" data-slide="2">
+                        <div class="wpc-ob-slide" data-slide="3">
                             <div class="wpc-ob-emoji">🔒</div>
                             <h2><?php esc_html_e( 'Is it safe?', 'wordpress-copilot' ); ?></h2>
                             <ul class="wpc-ob-safety">
@@ -217,7 +241,7 @@ class WPC_Chat_Widget {
                             </ul>
                         </div>
 
-                        <div class="wpc-ob-slide" data-slide="3">
+                        <div class="wpc-ob-slide" data-slide="4">
                             <div class="wpc-ob-emoji">💡</div>
                             <h2><?php esc_html_e( 'Try these examples', 'wordpress-copilot' ); ?></h2>
                             <div class="wpc-ob-examples">
@@ -263,7 +287,7 @@ class WPC_Chat_Widget {
         $engine = WPC_Engine_Factory::make( $selected_model );
         if ( is_wp_error( $engine ) ) {
             self::clean_output_buffer();
-            wp_send_json_error( [ 'message' => $engine->get_error_message() ] );
+            wp_send_json_error( [ 'message' => $engine->get_error_message(), 'code' => $engine->get_error_code() ] );
         }
 
         // Schema
@@ -363,7 +387,7 @@ class WPC_Chat_Widget {
             // Engine
             $engine = WPC_Engine_Factory::make( $selected_model );
             if ( is_wp_error( $engine ) ) {
-                self::sse_push( 'error', $engine->get_error_message() );
+                self::sse_push( 'error', $engine->get_error_message(), [ 'code' => $engine->get_error_code() ] );
                 die();
             }
 
