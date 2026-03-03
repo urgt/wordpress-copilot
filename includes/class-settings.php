@@ -78,7 +78,18 @@ class WPC_Settings {
     public static function init(): void {
         add_action( 'admin_menu',  [ __CLASS__, 'add_settings_page' ] );
         add_action( 'admin_init',  [ __CLASS__, 'register_settings' ] );
+        add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_admin_assets' ] );
         add_action( 'wp_ajax_wpc_flush_schema', [ __CLASS__, 'ajax_flush_schema' ] );
+    }
+
+    public static function enqueue_admin_assets( string $hook ): void {
+        if ( $hook !== 'settings_page_wordpress-copilot' ) return;
+        wp_enqueue_style(
+            'wpc-admin',
+            WPC_URL . 'assets/css/admin.css',
+            [],
+            WPC_VERSION
+        );
     }
 
     public static function register_settings(): void {
@@ -178,6 +189,7 @@ class WPC_Settings {
     /** Returns matched recommendations: [pattern, label, desc, count] */
     public static function get_recommendations(): array {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- SHOW TABLES for recommendations UI; not cacheable (must reflect current state).
         $all_tables = $wpdb->get_col( 'SHOW TABLES' );
         $existing_exclusions = array_filter( array_map( 'trim',
             explode( "\n", self::get( 'excluded_tables', '' ) ) ) );
@@ -208,6 +220,7 @@ class WPC_Settings {
 
         global $wpdb;
         $ttl_key = '_transient_timeout_' . WPC_DB_Schema::CACHE_KEY;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Reading transient timeout directly to show accurate expiry countdown.
         $expires = (int) $wpdb->get_var(
             $wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $ttl_key )
         );
@@ -230,7 +243,9 @@ class WPC_Settings {
         $cur_prov  = $opts['provider'] ?? 'anthropic';
 
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table count and DB size for settings dashboard; reflects live state.
         $table_count    = count( $wpdb->get_col( 'SHOW TABLES' ) );
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.NotPrepared -- information_schema query; no user input; reflect live DB size.
         $db_size_mb     = (float) $wpdb->get_var(
             "SELECT ROUND(SUM(data_length + index_length) / 1024 / 1024, 1)
              FROM information_schema.TABLES WHERE table_schema = DATABASE()"
@@ -242,125 +257,8 @@ class WPC_Settings {
         ?>
         <div class="wpc-admin-page">
 
-        <style>
-        .wpc-admin-page { max-width:900px; margin:20px 20px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
-        .wpc-admin-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
-        .wpc-admin-header h1 { margin:0; font-size:22px; color:#1d2327; }
-        .wpc-admin-header h1 span { font-size:12px; color:#999; font-weight:400; margin-left:8px; }
-        .wpc-tabs { display:flex; gap:2px; border-bottom:2px solid #ddd; margin-bottom:0; }
-        .wpc-tab-btn { background:none; border:none; padding:10px 18px; font-size:13px; font-weight:500;
-                       color:#666; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px;
-                       transition:color .15s; border-radius:4px 4px 0 0; }
-        .wpc-tab-btn:hover { color:#2271b1; background:#f6f7f7; }
-        .wpc-tab-btn.active { color:#2271b1; border-bottom-color:#2271b1; background:#fff; font-weight:600; }
-        .wpc-tab-panel { display:none; padding:24px 0 0; }
-        .wpc-tab-panel.active { display:block; }
-        .wpc-card { background:#fff; border:1px solid #dcdcde; border-radius:6px; padding:20px 24px; margin-bottom:16px; }
-        .wpc-card h3 { margin:0 0 16px; font-size:14px; font-weight:600; color:#1d2327; display:flex; align-items:center; gap:8px; }
-        .wpc-card h3 .wpc-badge { font-size:10px; background:#f0f6fc; color:#2271b1; border:1px solid #c2d9f0;
-                                   padding:2px 8px; border-radius:20px; font-weight:500; }
-        .wpc-card h3 .wpc-badge.warn { background:#fcf0f0; color:#c0392b; border-color:#f0c2c2; }
-        .wpc-field { display:grid; grid-template-columns:200px 1fr; gap:12px; align-items:start; margin-bottom:14px; }
-        .wpc-field:last-child { margin-bottom:0; }
-        .wpc-field label { font-size:13px; font-weight:500; color:#3c434a; padding-top:6px; }
-        .wpc-field .wpc-desc { font-size:12px; color:#757575; margin-top:4px; line-height:1.5; }
-        .wpc-field input[type=text], .wpc-field input[type=password], .wpc-field input[type=number],
-        .wpc-field input[type=url], .wpc-field select, .wpc-field textarea {
-            width:100%; max-width:400px; box-sizing:border-box; font-size:13px; }
-        .wpc-field textarea { font-family:monospace; font-size:12px; resize:vertical; min-height:100px; max-width:none; }
-        .wpc-toggle-row { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
-        .wpc-toggle-row input[type=checkbox] { margin-top:2px; flex-shrink:0; }
-        .wpc-toggle-row label { font-size:13px; color:#3c434a; cursor:pointer; }
-        .wpc-toggle-row .wpc-desc { font-size:12px; color:#757575; margin-top:2px; }
-        .wpc-toggle-big { display:flex; align-items:center; justify-content:space-between;
-                           border:1px solid #dcdcde; border-radius:6px; padding:14px 16px; margin-bottom:14px;
-                           background:#fafafa; transition:border-color .15s; }
-        .wpc-toggle-big:has(input:checked) { border-color:#2271b1; background:#f0f6fc; }
-        .wpc-toggle-big-info { flex:1; }
-        .wpc-toggle-big-info strong { font-size:13px; color:#1d2327; display:block; margin-bottom:2px; }
-        .wpc-toggle-big-info span { font-size:12px; color:#757575; }
-        .wpc-stat-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-        .wpc-stat { flex:1; min-width:120px; background:#f6f7f7; border:1px solid #dcdcde; border-radius:6px;
-                    padding:12px 16px; text-align:center; }
-        .wpc-stat .val { font-size:22px; font-weight:700; color:#2271b1; display:block; }
-        .wpc-stat .lbl { font-size:11px; color:#757575; text-transform:uppercase; letter-spacing:.4px; }
-        .wpc-stat.warn .val { color:#c0392b; }
-        .wpc-inline-btn { background:#fff; border:1px solid #2271b1; color:#2271b1; padding:5px 12px;
-                          font-size:12px; border-radius:4px; cursor:pointer; font-weight:500; transition:background .12s; }
-        .wpc-inline-btn:hover { background:#2271b1; color:#fff; }
-        .wpc-inline-btn.success { border-color:#0a8a3c; color:#0a8a3c; }
-        .wpc-inline-btn.danger  { border-color:#c0392b; color:#c0392b; }
-        .wpc-inline-btn.danger:hover { background:#c0392b; color:#fff; }
-        .wpc-provider-card { display:flex; align-items:center; gap:12px; border:1px solid #dcdcde; border-radius:6px;
-                             padding:12px 16px; margin-bottom:8px; cursor:pointer; transition:border-color .15s; }
-        .wpc-provider-card:has(input:checked) { border-color:#2271b1; background:#f0f6fc; }
-        .wpc-provider-card input { flex-shrink:0; }
-        .wpc-provider-card .prov-name { font-size:13px; font-weight:600; color:#1d2327; }
-        .wpc-provider-card .prov-desc { font-size:12px; color:#757575; }
-        .wpc-roles-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
-        .wpc-role-item { display:flex; align-items:center; gap:6px; font-size:12px; color:#3c434a; }
-        .wpc-anon-tag { display:inline-block; background:#fff3cd; border:1px solid #ffc107; color:#856404;
-                        font-size:11px; padding:1px 7px; border-radius:20px; margin:2px; font-family:monospace; }
-        .wpc-section-divider { border:none; border-top:1px solid #f0f0f0; margin:16px 0; }
-
-        /* ── Privacy: radio group ── */
-        .wpc-radio-group { display:flex; flex-direction:column; gap:0; margin-bottom:4px; }
-        .wpc-radio-opt { display:flex; align-items:flex-start; gap:12px; padding:13px 16px;
-                         border:1px solid #dcdcde; border-bottom:none; background:#fff; cursor:pointer;
-                         transition:background .12s, border-color .12s; }
-        .wpc-radio-opt:first-child { border-radius:6px 6px 0 0; }
-        .wpc-radio-opt:last-child  { border-bottom:1px solid #dcdcde; border-radius:0 0 6px 6px; }
-        .wpc-radio-opt:hover { background:#f9fafb; }
-        .wpc-radio-opt:has(input:checked) { background:#f0f6fc; border-color:#2271b1;
-                                             position:relative; z-index:1; }
-        .wpc-radio-opt:has(input:checked)+.wpc-radio-opt { border-top-color:#2271b1; }
-        .wpc-radio-opt input[type=radio] { margin-top:2px; flex-shrink:0; accent-color:#2271b1; }
-        .wpc-radio-opt .opt-body { flex:1; }
-        .wpc-radio-opt .opt-title { font-size:13px; font-weight:600; color:#1d2327; }
-        .wpc-radio-opt .opt-desc { font-size:12px; color:#757575; line-height:1.5; margin-top:2px; }
-        .wpc-opt-badge { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px;
-                         border-radius:3px; margin-top:5px; }
-        .wpc-opt-badge.success { background:#dcfce7; color:#166534; }
-        .wpc-opt-badge.warn    { background:#fef3c7; color:#92400e; }
-        .wpc-opt-badge.danger  { background:#fee2e2; color:#991b1b; }
-        .wpc-privacy-note { background:#f8f9fa; border:1px solid #e2e4e7; border-radius:6px;
-                            padding:14px 18px; font-size:12px; color:#3c434a; line-height:1.7; }
-        .wpc-privacy-note strong { color:#1d2327; }
-        .wpc-privacy-note code { background:#eef1f5; padding:1px 5px; border-radius:3px; font-size:11px; }
-        .wpc-preset-bar { display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap; }
-        .wpc-preset-bar .p-label { font-size:12px; color:#757575; font-weight:500; }
-
-        /* ── Performance: info bar ── */
-        .wpc-db-bar { display:flex; gap:0; align-items:stretch; background:#fff;
-                      border:1px solid #dcdcde; border-radius:6px; margin-bottom:16px;
-                      overflow:hidden; }
-        .wpc-db-bar .bar-item { flex:1; padding:12px 16px; text-align:center;
-                                border-right:1px solid #f0f0f1; }
-        .wpc-db-bar .bar-item:last-child { border-right:none; }
-        .wpc-db-bar .bar-val { font-size:16px; font-weight:700; color:#1d2327; display:block; }
-        .wpc-db-bar .bar-val.green  { color:#166534; }
-        .wpc-db-bar .bar-val.yellow { color:#b45309; }
-        .wpc-db-bar .bar-val.red    { color:#991b1b; }
-        .wpc-db-bar .bar-lbl { font-size:11px; color:#757575; text-transform:uppercase;
-                                letter-spacing:.3px; margin-top:2px; display:block; }
-
-        /* ── Performance: recommendations ── */
-        .wpc-rec-list { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
-        .wpc-rec-item { display:flex; align-items:center; gap:12px; border:1px solid #e2e4e7;
-                        border-radius:4px; padding:8px 12px; background:#fff; font-size:12px; }
-        .wpc-rec-item:hover { border-color:#2271b1; }
-        .wpc-rec-info { flex:1; }
-        .wpc-rec-info strong { font-size:12px; color:#1d2327; display:block; }
-        .wpc-rec-info span   { font-size:11px; color:#757575; }
-        .wpc-rec-pattern { font-family:monospace; font-size:11px; background:#f0f6fc; color:#2271b1;
-                           padding:2px 8px; border-radius:3px; border:1px solid #c2d9f0; }
-        .wpc-rec-count { font-size:11px; color:#999; white-space:nowrap; }
-        .wpc-token-note { background:#fffbeb; border:1px solid #fde68a; border-radius:4px;
-                          padding:9px 14px; font-size:12px; color:#92400e; margin-bottom:14px; }
-        </style>
-
         <div class="wpc-admin-header">
-            <h1>⚡ WordPress Copilot <span>v<?php echo WPC_VERSION; ?></span></h1>
+            <h1>⚡ WordPress Copilot <span>v<?php echo esc_html( WPC_VERSION ); ?></span></h1>
         </div>
 
         <?php settings_errors( 'wpc_group' ); ?>
@@ -386,12 +284,12 @@ class WPC_Settings {
                         $icons = [ 'anthropic' => '🟤', 'openai' => '🟢', 'google' => '🔵' ];
                     ?>
                     <label class="wpc-provider-card">
-                        <input type="radio" name="<?php echo self::OPTION_KEY; ?>[provider]"
+                        <input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[provider]"
                                value="<?php echo esc_attr($key); ?>"
                                <?php checked( $cur_prov, $key ); ?>
                                data-provider="<?php echo esc_attr($key); ?>">
                         <div>
-                            <div class="prov-name"><?php echo ($icons[$key] ?? '⚫'); ?> <?php echo esc_html($info['label']); ?></div>
+                            <div class="prov-name"><?php echo esc_html( $icons[$key] ?? '⚫' ); ?> <?php echo esc_html($info['label']); ?></div>
                             <div class="prov-desc"><?php
                                 $descs = [
                                     'anthropic' => 'Claude models — great for nuanced analysis and long contexts',
@@ -413,7 +311,7 @@ class WPC_Settings {
                         <div class="wpc-field">
                             <label>Active model</label>
                             <div>
-                                <select name="<?php echo self::OPTION_KEY; ?>[model]">
+                                <select name="<?php echo esc_attr( self::OPTION_KEY ); ?>[model]">
                                     <?php foreach ( $info['models'] as $mid => $mname ) : ?>
                                         <option value="<?php echo esc_attr($mid); ?>"
                                             <?php selected( ($opts['model'] ?? $info['default_model']), $mid ); ?>>
@@ -434,7 +332,7 @@ class WPC_Settings {
                         <label>Secret key</label>
                         <div>
                             <input type="password"
-                                   name="<?php echo self::OPTION_KEY; ?>[api_key]"
+                                   name="<?php echo esc_attr( self::OPTION_KEY ); ?>[api_key]"
                                    value="<?php echo esc_attr( $opts['api_key'] ?? '' ); ?>"
                                    class="regular-text" autocomplete="new-password" />
                             <p class="wpc-desc" id="wpc-api-key-hint"></p>
@@ -463,7 +361,7 @@ class WPC_Settings {
                     <h3>Protection Level</h3>
                     <div class="wpc-radio-group">
                         <label class="wpc-radio-opt">
-                            <input type="radio" name="<?php echo self::OPTION_KEY; ?>[anonymize_level]"
+                            <input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"
                                    value="off" <?php checked( $anon_level, 'off' ); ?>>
                             <div class="opt-body">
                                 <div class="opt-title">Disabled</div>
@@ -471,7 +369,7 @@ class WPC_Settings {
                             </div>
                         </label>
                         <label class="wpc-radio-opt">
-                            <input type="radio" name="<?php echo self::OPTION_KEY; ?>[anonymize_level]"
+                            <input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"
                                    value="results" <?php checked( $anon_level, 'results' ); ?>>
                             <div class="opt-body">
                                 <div class="opt-title">Mask query results</div>
@@ -479,7 +377,7 @@ class WPC_Settings {
                             </div>
                         </label>
                         <label class="wpc-radio-opt">
-                            <input type="radio" name="<?php echo self::OPTION_KEY; ?>[anonymize_level]"
+                            <input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"
                                    value="full" <?php checked( $anon_level, 'full' ); ?>>
                             <div class="opt-body">
                                 <div class="opt-title">Full protection</div>
@@ -495,7 +393,7 @@ class WPC_Settings {
                     <div class="wpc-field">
                         <label>Column names</label>
                         <div>
-                            <textarea name="<?php echo self::OPTION_KEY; ?>[anonymize_columns]"
+                            <textarea name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_columns]"
                                       rows="8"><?php echo esc_textarea( $opts['anonymize_columns'] ?? self::default_anon_columns() ); ?></textarea>
                             <p class="wpc-desc">One column name per line. Case-insensitive exact match. Values in matching columns are replaced with <code>[REDACTED]</code>.</p>
                         </div>
@@ -525,7 +423,7 @@ class WPC_Settings {
                 <!-- Compact DB info bar -->
                 <div class="wpc-db-bar">
                     <div class="bar-item">
-                        <span class="bar-val <?php echo $table_count > 60 ? 'yellow' : ''; ?>"><?php echo $table_count; ?></span>
+                        <span class="bar-val <?php echo $table_count > 60 ? 'yellow' : ''; ?>"><?php echo absint( $table_count ); ?></span>
                         <span class="bar-lbl">Tables</span>
                     </div>
                     <div class="bar-item">
@@ -533,13 +431,13 @@ class WPC_Settings {
                         <span class="bar-lbl">DB size</span>
                     </div>
                     <div class="bar-item">
-                        <span class="bar-val <?php echo $exp_color; ?>">
-                            <?php echo $cache['cached'] ? $exp_min . ' min' : 'Not cached'; ?>
+                        <span class="bar-val <?php echo esc_attr( $exp_color ); ?>">
+                            <?php echo $cache['cached'] ? absint( $exp_min ) . ' min' : 'Not cached'; ?>
                         </span>
                         <span class="bar-lbl">Cache TTL</span>
                     </div>
                     <div class="bar-item">
-                        <span class="bar-val <?php echo $tok_color; ?>">
+                        <span class="bar-val <?php echo esc_attr( $tok_color ); ?>">
                             <?php echo $cache['cached'] ? '~' . number_format( $cache['tokens'] ) : '—'; ?>
                         </span>
                         <span class="bar-lbl">Schema tokens</span>
@@ -558,7 +456,7 @@ class WPC_Settings {
                     <div class="wpc-field">
                         <label>Cache duration</label>
                         <div>
-                            <select name="<?php echo self::OPTION_KEY; ?>[schema_cache_ttl]">
+                            <select name="<?php echo esc_attr( self::OPTION_KEY ); ?>[schema_cache_ttl]">
                                 <option value="0"     <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '0'     ); ?>>Disabled</option>
                                 <option value="600"   <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '600'   ); ?>>10 minutes</option>
                                 <option value="3600"  <?php selected( ($opts['schema_cache_ttl'] ?? '3600'), '3600'  ); ?>>1 hour (recommended)</option>
@@ -571,7 +469,7 @@ class WPC_Settings {
                     <div class="wpc-field">
                         <label>Max tables in schema</label>
                         <div>
-                            <input type="number" name="<?php echo self::OPTION_KEY; ?>[max_schema_tables]"
+                            <input type="number" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[max_schema_tables]"
                                    value="<?php echo esc_attr( $opts['max_schema_tables'] ?? 80 ); ?>"
                                    min="5" max="500" class="small-text" />
                             <p class="wpc-desc">WordPress core tables are always prioritized. Remaining slots filled alphabetically.</p>
@@ -604,7 +502,7 @@ class WPC_Settings {
                                 <span><?php echo esc_html( $rec['desc'] ); ?></span>
                             </div>
                             <code class="wpc-rec-pattern"><?php echo esc_html( $rec['pattern'] ); ?></code>
-                            <span class="wpc-rec-count"><?php echo $rec['count']; ?> table<?php echo $rec['count'] !== 1 ? 's' : ''; ?></span>
+                            <span class="wpc-rec-count"><?php echo absint( $rec['count'] ); ?> table<?php echo $rec['count'] !== 1 ? 's' : ''; ?></span>
                             <button type="button" class="wpc-inline-btn wpc-add-rec">Exclude</button>
                         </div>
                         <?php endforeach; ?>
@@ -620,7 +518,7 @@ class WPC_Settings {
                     <div class="wpc-field">
                         <label>Exclusion patterns</label>
                         <div>
-                            <textarea name="<?php echo self::OPTION_KEY; ?>[excluded_tables]"
+                            <textarea name="<?php echo esc_attr( self::OPTION_KEY ); ?>[excluded_tables]"
                                       rows="6" id="wpc-excluded-tables"><?php echo esc_textarea( $opts['excluded_tables'] ?? '' ); ?></textarea>
                             <p class="wpc-desc">One pattern per line. Use <code>*</code> as wildcard (e.g. <code>wp_yoast_*</code>). Matched tables are completely hidden from AI.</p>
                         </div>
@@ -633,7 +531,7 @@ class WPC_Settings {
                     <div class="wpc-field">
                         <label>Execution timeout</label>
                         <div>
-                            <input type="number" name="<?php echo self::OPTION_KEY; ?>[query_timeout]"
+                            <input type="number" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[query_timeout]"
                                    value="<?php echo esc_attr( $opts['query_timeout'] ?? 15 ); ?>"
                                    min="0" max="120" class="small-text" /> seconds
                             <p class="wpc-desc">MySQL <code>MAX_EXECUTION_TIME</code> per query. Set to 0 for server default.</p>
@@ -642,7 +540,7 @@ class WPC_Settings {
                     <div class="wpc-field">
                         <label>Maximum result rows</label>
                         <div>
-                            <input type="number" name="<?php echo self::OPTION_KEY; ?>[max_rows]"
+                            <input type="number" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[max_rows]"
                                    value="<?php echo esc_attr( $opts['max_rows'] ?? 100 ); ?>"
                                    min="1" max="5000" class="small-text" /> rows
                             <p class="wpc-desc">AI is instructed to add <code>LIMIT</code> to all queries. Hard safety cap: 1–5000.</p>
@@ -663,7 +561,7 @@ class WPC_Settings {
                         <?php foreach ( $roles as $role_key => $role_data ) : ?>
                         <label class="wpc-role-item">
                             <input type="checkbox"
-                                   name="<?php echo self::OPTION_KEY; ?>[allowed_roles][]"
+                                   name="<?php echo esc_attr( self::OPTION_KEY ); ?>[allowed_roles][]"
                                    value="<?php echo esc_attr($role_key); ?>"
                                    <?php checked( in_array( $role_key, (array)($opts['allowed_roles'] ?? ['administrator']), true ) ); ?>>
                             <?php echo esc_html( $role_data['name'] ); ?>
@@ -681,7 +579,7 @@ class WPC_Settings {
                 <div class="wpc-card">
                     <h3>Response</h3>
                     <div class="wpc-toggle-row">
-                        <input type="checkbox" id="opt_streaming" name="<?php echo self::OPTION_KEY; ?>[streaming]" value="1"
+                        <input type="checkbox" id="opt_streaming" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[streaming]" value="1"
                                <?php checked( ! empty( $opts['streaming'] ) ); ?>>
                         <div>
                             <label for="opt_streaming">⚡ Enable streaming</label>
@@ -689,7 +587,7 @@ class WPC_Settings {
                         </div>
                     </div>
                     <div class="wpc-toggle-row">
-                        <input type="checkbox" id="opt_show_sql" name="<?php echo self::OPTION_KEY; ?>[show_sql]" value="1"
+                        <input type="checkbox" id="opt_show_sql" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[show_sql]" value="1"
                                <?php checked( ! empty( $opts['show_sql'] ) ); ?>>
                         <div>
                             <label for="opt_show_sql">🔍 Show generated SQL</label>
@@ -701,7 +599,7 @@ class WPC_Settings {
                 <div class="wpc-card">
                     <h3>Input</h3>
                     <div class="wpc-toggle-row">
-                        <input type="checkbox" id="opt_voice" name="<?php echo self::OPTION_KEY; ?>[enable_voice]" value="1"
+                        <input type="checkbox" id="opt_voice" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[enable_voice]" value="1"
                                <?php checked( ! empty( $opts['enable_voice'] ) ); ?>>
                         <div>
                             <label for="opt_voice">🎙️ Enable voice input</label>
@@ -713,7 +611,7 @@ class WPC_Settings {
                 <div class="wpc-card">
                     <h3>Logging & Debug</h3>
                     <div class="wpc-toggle-row">
-                        <input type="checkbox" id="opt_log" name="<?php echo self::OPTION_KEY; ?>[log_queries]" value="1"
+                        <input type="checkbox" id="opt_log" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[log_queries]" value="1"
                                <?php checked( ! empty( $opts['log_queries'] ) ); ?>>
                         <div>
                             <label for="opt_log">📋 Log queries to database</label>
@@ -721,7 +619,7 @@ class WPC_Settings {
                         </div>
                     </div>
                     <div class="wpc-toggle-row">
-                        <input type="checkbox" id="opt_debug" name="<?php echo self::OPTION_KEY; ?>[debug_mode]" value="1"
+                        <input type="checkbox" id="opt_debug" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[debug_mode]" value="1"
                                <?php checked( ! empty( $opts['debug_mode'] ) ); ?>>
                         <div>
                             <label for="opt_debug">🐛 Debug mode</label>
@@ -758,16 +656,16 @@ class WPC_Settings {
                 google:    'Get your key at <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com</a>',
             };
             function updateProvider() {
-                var prov = $('input[name="<?php echo self::OPTION_KEY; ?>[provider]"]:checked').val();
+                var prov = $('input[name="<?php echo esc_attr( self::OPTION_KEY ); ?>[provider]"]:checked').val();
                 $('.wpc-model-group').hide();
                 $('.wpc-model-group[data-provider="'+prov+'"]').show();
                 $('#wpc-api-key-hint').html(hints[prov] || '');
             }
-            $('input[name="<?php echo self::OPTION_KEY; ?>[provider]"]').on('change', updateProvider);
+            $('input[name="<?php echo esc_attr( self::OPTION_KEY ); ?>[provider]"]').on('change', updateProvider);
             updateProvider();
 
             // Anonymizer level toggle
-            $('input[name="<?php echo self::OPTION_KEY; ?>[anonymize_level]"]').on('change', function(){
+            $('input[name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"]').on('change', function(){
                 var off = this.value === 'off';
                 $('#wpc-anon-cols-card').css({ opacity: off ? .45 : 1, pointerEvents: off ? 'none' : '' });
             });
@@ -780,7 +678,7 @@ class WPC_Settings {
             };
             $('[data-preset]').on('click', function(){
                 var cols = wpcPresets[$(this).data('preset')] || '';
-                var $ta  = $('textarea[name="<?php echo self::OPTION_KEY; ?>[anonymize_columns]"]');
+                var $ta  = $('textarea[name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_columns]"]');
                 var cur  = $ta.val().trim();
                 var existing = cur.split('\n').map(function(s){ return s.trim().toLowerCase(); });
                 var add = cols.split('\n').filter(function(c){ return c && existing.indexOf(c.toLowerCase()) === -1; });
@@ -791,7 +689,7 @@ class WPC_Settings {
             $('#wpc-flush-schema').on('click', function(){
                 var $btn = $(this);
                 $btn.text('Flushing…').prop('disabled', true);
-                $.post(ajaxurl, { action: 'wpc_flush_schema', nonce: '<?php echo $admin_nonce; ?>' }, function(){
+                $.post(ajaxurl, { action: 'wpc_flush_schema', nonce: '<?php echo esc_attr( $admin_nonce ); ?>' }, function(){
                     $btn.addClass('success').text('✓ Done').prop('disabled', false);
                     setTimeout(function(){ $btn.removeClass('success').text('Flush cache'); }, 2500);
                 });
@@ -827,12 +725,15 @@ class WPC_Settings {
         if ( empty( $opts['log_queries'] ) ) return;
         global $wpdb;
         $table = $wpdb->prefix . 'copilot_logs';
-        if ( $wpdb->get_var("SHOW TABLES LIKE '{$table}'") !== $table ) return;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table existence check for log display; not cacheable.
+        if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) return;
 
-        $logs = $wpdb->get_results(
-            "SELECT l.*, u.display_name FROM {$table} l
-             LEFT JOIN {$wpdb->users} u ON u.ID = l.user_id
-             ORDER BY l.executed_at DESC LIMIT 50"
+        $logs = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+            $wpdb->prepare(
+                'SELECT l.*, u.display_name FROM %i l LEFT JOIN %i u ON u.ID = l.user_id ORDER BY l.executed_at DESC LIMIT 50',
+                $table,
+                $wpdb->users
+            )
         );
         if ( empty( $logs ) ) return;
         ?>

@@ -54,6 +54,7 @@ abstract class WPC_Engine_Core {
      * WordPress http_api_curl hook — intercepts the cURL handle to capture streaming data.
      */
     public function stream_handler( $handle, array $args, string $url ): void {
+        // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt -- Must use curl_setopt directly to install CURLOPT_WRITEFUNCTION on WP's managed curl handle.
         curl_setopt( $handle, CURLOPT_WRITEFUNCTION, function ( $curl, $data ) {
             $length = strlen( $data );
             $this->stream_temp_buffer .= $data;
@@ -223,9 +224,9 @@ PROMPT;
     /* ── Safe JSON encode (AI Engine pattern) ───────────────────── */
 
     protected function safe_json_encode( $data ): string {
-        $json = json_encode( $data, JSON_INVALID_UTF8_SUBSTITUTE );
+        $json = wp_json_encode( $data, JSON_INVALID_UTF8_SUBSTITUTE );
         if ( $json === false ) {
-            throw new \RuntimeException( 'JSON encode failed: ' . json_last_error_msg() );
+        throw new \RuntimeException( 'JSON encode failed: ' . json_last_error_msg() ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped
         }
         return $json;
     }

@@ -41,6 +41,7 @@ class WPC_Chat_Storage {
 
     public static function load_chats( int $user_id, string $provider ): array {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Chat history is user-specific, per-request; caching would return stale data.
         $rows = $wpdb->get_results( $wpdb->prepare(
             "SELECT id, title, messages, created_at, updated_at
              FROM %i
@@ -86,12 +87,15 @@ class WPC_Chat_Storage {
             return $msg;
         }, $messages );
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Existence check before write; caching inappropriate here.
         $exists = $wpdb->get_var( $wpdb->prepare(
             "SELECT id FROM %i WHERE id = %s AND user_id = %d",
             self::table(), $id, $user_id
         ) );
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- write operations (INSERT/UPDATE/DELETE) cannot be cached.
         if ( $exists ) {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- UPDATE write operation.
             $result = $wpdb->update(
                 self::table(),
                 [
@@ -104,6 +108,7 @@ class WPC_Chat_Storage {
                 [ '%s', '%d' ]
             );
         } else {
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- INSERT write operation.
             $result = $wpdb->insert(
                 self::table(),
                 [
@@ -124,6 +129,7 @@ class WPC_Chat_Storage {
 
     public static function delete_chat( int $user_id, string $chat_id ): bool {
         global $wpdb;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DELETE write operation.
         return (bool) $wpdb->delete(
             self::table(),
             [ 'id' => $chat_id, 'user_id' => $user_id ],
@@ -140,21 +146,28 @@ class WPC_Chat_Storage {
     }
 
     public static function ajax_load(): void {
-        self::verify_nonce();
+        self::verify_nonce(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ( ! WPC_Chat_Widget::current_user_allowed() ) {
+            wp_send_json_error( 'Access denied.', 403 );
+        }
         $user_id  = get_current_user_id();
-        $provider = sanitize_text_field( $_POST['provider'] ?? '' );
+        $provider = sanitize_text_field( wp_unslash( $_POST['provider'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
         wp_send_json_success( self::load_chats( $user_id, $provider ) );
     }
 
     public static function ajax_save(): void {
-        self::verify_nonce();
+        self::verify_nonce(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ( ! WPC_Chat_Widget::current_user_allowed() ) {
+            wp_send_json_error( 'Access denied.', 403 );
+        }
         $user_id  = get_current_user_id();
-        $provider = sanitize_text_field( $_POST['provider'] ?? '' );
-        $chat_raw = $_POST['chat'] ?? null;
+        $provider = sanitize_text_field( wp_unslash( $_POST['provider'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        // phpcs:ignore WordPress.Security.NonceVerification.Missing,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+        $chat_raw = wp_unslash( $_POST['chat'] ?? null );
 
         if ( ! $chat_raw ) wp_send_json_error( 'Missing chat data' );
 
-        $chat = is_array( $chat_raw ) ? $chat_raw : json_decode( wp_unslash( $chat_raw ), true );
+        $chat = is_array( $chat_raw ) ? array_map( 'sanitize_text_field', (array) $chat_raw ) : json_decode( (string) $chat_raw, true );
         if ( ! is_array( $chat ) ) wp_send_json_error( 'Invalid chat data' );
 
         $ok = self::save_chat( $user_id, $provider, $chat );
@@ -162,9 +175,12 @@ class WPC_Chat_Storage {
     }
 
     public static function ajax_delete(): void {
-        self::verify_nonce();
+        self::verify_nonce(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
+        if ( ! WPC_Chat_Widget::current_user_allowed() ) {
+            wp_send_json_error( 'Access denied.', 403 );
+        }
         $user_id = get_current_user_id();
-        $chat_id = sanitize_text_field( $_POST['chat_id'] ?? '' );
+        $chat_id = sanitize_text_field( wp_unslash( $_POST['chat_id'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification.Missing
         if ( ! $chat_id ) wp_send_json_error( 'Missing chat_id' );
         self::delete_chat( $user_id, $chat_id );
         wp_send_json_success();

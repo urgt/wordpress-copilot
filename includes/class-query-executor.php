@@ -44,11 +44,11 @@ class WPC_Query_Executor {
         // Optional query timeout for large databases
         $timeout = (int) WPC_Settings::get( 'query_timeout', 15 );
         if ( $timeout > 0 ) {
-            $wpdb->query( "SET SESSION MAX_EXECUTION_TIME=" . ( $timeout * 1000 ) );
+            $wpdb->query( $wpdb->prepare( 'SET SESSION MAX_EXECUTION_TIME=%d', $timeout * 1000 ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
         }
 
         $wpdb->hide_errors();
-        $rows = $wpdb->get_results( $sql, ARRAY_A );
+        $rows = $wpdb->get_results( $sql, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared,WordPress.DB.DirectDatabaseQuery
         $wpdb->show_errors();
 
         if ( $wpdb->last_error ) {
@@ -79,6 +79,7 @@ class WPC_Query_Executor {
 
                 if ( ! self::is_serialized( $val ) ) continue;
 
+                // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPress.PHP.DiscouragedPHPFunctions.serialize_unserialize -- pre-validated by is_serialized(), reading existing WP-serialized DB data.
                 $unserialized = @unserialize( $val );
                 if ( $unserialized === false ) continue;
 
@@ -87,9 +88,9 @@ class WPC_Query_Executor {
                     $flat = array_filter( $unserialized, fn( $v ) => ! is_array( $v ) && ! is_object( $v ) );
                     $row[ $col ] = count( $flat ) === count( $unserialized )
                         ? implode( ', ', array_values( $unserialized ) )
-                        : json_encode( $unserialized, JSON_UNESCAPED_UNICODE );
+                        : wp_json_encode( $unserialized, JSON_UNESCAPED_UNICODE );
                 } elseif ( is_object( $unserialized ) ) {
-                    $row[ $col ] = json_encode( $unserialized, JSON_UNESCAPED_UNICODE );
+                    $row[ $col ] = wp_json_encode( $unserialized, JSON_UNESCAPED_UNICODE );
                 } else {
                     $row[ $col ] = (string) $unserialized;
                 }
@@ -113,7 +114,7 @@ class WPC_Query_Executor {
                 $summary = is_int( array_key_first( $decoded ) )
                     ? $count . ' items'
                     : implode( ', ', array_slice( array_keys( $decoded ), 0, 3 ) ) . ( $count > 3 ? '…' : '' );
-                $pretty  = json_encode( $decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+                $pretty  = wp_json_encode( $decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
                 return '<details class="wpc-cell-details"><summary class="wpc-cell-json-summary">{'
                     . esc_html( $summary ) . '}</summary>'
                     . '<pre class="wpc-cell-json-pre">' . esc_html( $pretty ) . '</pre></details>';

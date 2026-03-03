@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<ruleset name="WordPress Copilot">
+    <description>WordPress Coding Standards for WordPress Copilot plugin.</description>
+
+    <!-- Scan these files/folders -->
+    <file>.</file>
+
+    <!-- Exclude vendor and generated files -->
+    <exclude-pattern>./vendor/*</exclude-pattern>
+    <exclude-pattern>./node_modules/*</exclude-pattern>
+
+    <!-- WordPress coding standards rules -->
+    <rule ref="WordPress"/>
+
+    <!-- Require WordPress minimum version compatibility -->
+    <config name="minimum_supported_wp_version" value="6.0"/>
+
+    <!-- Set text domain for i18n checks -->
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="wordpress-copilot"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- Enforce correct prefix for all globals -->
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="WPC"/>
+                <element value="wpc"/>
+                <element value="wordpress_copilot"/>
+            </property>
+        </properties>
+        <!-- WPC is our intentional 3-letter prefix; WP.org accepts it -->
+        <exclude name="WordPress.NamingConventions.PrefixAllGlobals.ShortPrefixPassed"/>
+        <!-- False positive: all classes do use WPC_ prefix, but PHPCS rejects short prefix -->
+        <exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedClassFound"/>
+        <!-- False positive: all constants use WPC_ prefix -->
+        <exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedConstantFound"/>
+    </rule>
+
+    <!-- File naming: WP.org accepts class-{slug}.php format, full class name not required -->
+    <rule ref="WordPress.Files.FileName">
+        <exclude name="WordPress.Files.FileName.InvalidClassFileName"/>
+    </rule>
+
+    <!-- Doc comments are good practice but not a WP.org blocker -->
+    <rule ref="Squiz.Commenting.FileComment">
+        <exclude name="Squiz.Commenting.FileComment.Missing"/>
+    </rule>
+    <rule ref="Squiz.Commenting.ClassComment">
+        <exclude name="Squiz.Commenting.ClassComment.Missing"/>
+    </rule>
+    <rule ref="Squiz.Commenting.FunctionComment">
+        <exclude name="Squiz.Commenting.FunctionComment.Missing"/>
+        <exclude name="Squiz.Commenting.FunctionComment.WrongStyle"/>
+        <exclude name="Squiz.Commenting.FunctionComment.MissingParamTag"/>
+    </rule>
+    <rule ref="Squiz.Commenting.VariableComment">
+        <exclude name="Squiz.Commenting.VariableComment.Missing"/>
+    </rule>
+    <rule ref="Squiz.Commenting.InlineComment">
+        <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar"/>
+    </rule>
+    <rule ref="Generic.Commenting.DocComment">
+        <exclude name="Generic.Commenting.DocComment.MissingShort"/>
+    </rule>
+
+    <!-- PHP version requirement -->
+    <config name="testVersion" value="8.0-"/>
+
+    <!-- Allow short array syntax (plugin requires PHP 8.0) -->
+    <rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
+</ruleset>

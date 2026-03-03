@@ -1,17 +1,21 @@
 <?php
+
 /**
  * Plugin Name:  WordPress Copilot
-    * Plugin URI:   https://github.com/urgt/wordpress-copilot
+ * Plugin URI:   https://github.com/urgt/wordpress-copilot
  * Description:  AI-powered natural language database assistant. Ask anything about your data in plain language — get instant SQL-powered answers.
- * Version:      0.0.1
+ * Version:      1.0.0
+ * Requires at least: 6.0
+ * Requires PHP: 8.0
  * Author:       G'ayrat Urinbaev
  * License:      GPL-2.0+
+ * License URI:  https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:  wordpress-copilot
  */
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WPC_VERSION',  '2.0.0' );
+define( 'WPC_VERSION',  '1.0.0' );
 define( 'WPC_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'WPC_URL',      plugin_dir_url( __FILE__ ) );
 define( 'WPC_TIMEOUT',  90 );
@@ -32,12 +36,18 @@ require_once WPC_PATH . 'includes/class-chat-widget.php';
 /* ── Bootstrap ───────────────────────────────────────────────────── */
 add_action( 'plugins_loaded', function () {
     WPC_Settings::init();
-    WPC_Chat_Storage::create_table();
     WPC_Chat_Storage::register_ajax();
     WPC_Chat_Widget::init();
 
+    // Suppress WP DB error output for AJAX requests — nonce is verified in each handler.
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing
     if ( wp_doing_ajax() && in_array( $_POST['action'] ?? '', [ 'wpc_query', 'wpc_stream' ], true ) ) {
         ob_start();
+        add_action( 'shutdown', function () {
+            ob_start( function ( $output ) {
+                return preg_replace( '/<div id="error"><p class="wpdberror">.*?<\/div>/s', '', $output );
+            } );
+        }, 5 );
     }
 } );
 

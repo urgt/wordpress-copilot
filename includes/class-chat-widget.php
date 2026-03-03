@@ -187,15 +187,9 @@ class WPC_Chat_Widget {
             wp_send_json_error( [ 'message' => 'Access denied.' ], 403 );
         }
 
-        $user_query = sanitize_textarea_field( wp_unslash( $_POST['query'] ?? '' ) );
-        $chat_context = self::sanitize_context( wp_unslash( $_POST['context'] ?? '' ) );
+        $user_query     = sanitize_textarea_field( wp_unslash( $_POST['query'] ?? '' ) );
+        $chat_context   = self::sanitize_context( wp_unslash( $_POST['context'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $selected_model = sanitize_text_field( wp_unslash( $_POST['model'] ?? '' ) );
-        if ( empty( $user_query ) ) {
-            self::clean_output_buffer();
-            wp_send_json_error( [ 'message' => 'Please enter a question.' ] );
-        }
-
-        $start = microtime( true );
 
         // Engine
         $engine = WPC_Engine_Factory::make( $selected_model );
@@ -256,7 +250,8 @@ class WPC_Chat_Widget {
 
         // Refresh nonce if needed
         $new_nonce = wp_create_nonce( 'wpc_nonce' );
-        if ( $new_nonce !== ( $_SERVER['HTTP_X_WP_NONCE'] ?? '' ) ) {
+        $client_nonce = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_WP_NONCE'] ?? '' ) );
+        if ( $new_nonce !== $client_nonce ) {
             $response['new_nonce'] = $new_nonce;
         }
 
@@ -280,8 +275,8 @@ class WPC_Chat_Widget {
             die();
         }
 
-        $user_query = sanitize_textarea_field( wp_unslash( $_POST['query'] ?? '' ) );
-        $chat_context = self::sanitize_context( wp_unslash( $_POST['context'] ?? '' ) );
+        $user_query     = sanitize_textarea_field( wp_unslash( $_POST['query'] ?? '' ) );
+        $chat_context   = self::sanitize_context( wp_unslash( $_POST['context'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
         $selected_model = sanitize_text_field( wp_unslash( $_POST['model'] ?? '' ) );
         if ( empty( $user_query ) ) {
             echo "data: " . wp_json_encode(['type'=>'error','data'=>'Please enter a question.']) . "\n\n";
@@ -375,8 +370,8 @@ class WPC_Chat_Widget {
     /* ── SSE helper (AI Engine stream_push pattern) ─────────────── */
 
     private static function clean_output_buffer(): void {
-        while ( ob_get_level() > 0 ) {
-            ob_end_clean();
+        if ( ob_get_level() > 0 ) {
+            ob_clean();
         }
     }
 
@@ -513,8 +508,10 @@ class WPC_Chat_Widget {
 
         global $wpdb;
         $table = $wpdb->prefix . 'copilot_logs';
-        if ( $wpdb->get_var("SHOW TABLES LIKE '{$table}'") !== $table ) return;
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- SHOW TABLES existence check before INSERT; caching not appropriate.
+        if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) return;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery -- INSERT write operation; not cacheable.
         $wpdb->insert( $table, [
             'user_id'       => get_current_user_id(),
             'user_query'    => $user_query,

@@ -1,0 +1,114 @@
+.wpc-admin-page { max-width:900px; margin:20px 20px 40px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; }
+.wpc-admin-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; }
+.wpc-admin-header h1 { margin:0; font-size:22px; color:#1d2327; }
+.wpc-admin-header h1 span { font-size:12px; color:#999; font-weight:400; margin-left:8px; }
+.wpc-tabs { display:flex; gap:2px; border-bottom:2px solid #ddd; margin-bottom:0; }
+.wpc-tab-btn { background:none; border:none; padding:10px 18px; font-size:13px; font-weight:500;
+               color:#666; cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px;
+               transition:color .15s; border-radius:4px 4px 0 0; }
+.wpc-tab-btn:hover { color:#2271b1; background:#f6f7f7; }
+.wpc-tab-btn.active { color:#2271b1; border-bottom-color:#2271b1; background:#fff; font-weight:600; }
+.wpc-tab-panel { display:none; padding:24px 0 0; }
+.wpc-tab-panel.active { display:block; }
+.wpc-card { background:#fff; border:1px solid #dcdcde; border-radius:6px; padding:20px 24px; margin-bottom:16px; }
+.wpc-card h3 { margin:0 0 16px; font-size:14px; font-weight:600; color:#1d2327; display:flex; align-items:center; gap:8px; }
+.wpc-card h3 .wpc-badge { font-size:10px; background:#f0f6fc; color:#2271b1; border:1px solid #c2d9f0;
+                           padding:2px 8px; border-radius:20px; font-weight:500; }
+.wpc-card h3 .wpc-badge.warn { background:#fcf0f0; color:#c0392b; border-color:#f0c2c2; }
+.wpc-field { display:grid; grid-template-columns:200px 1fr; gap:12px; align-items:start; margin-bottom:14px; }
+.wpc-field:last-child { margin-bottom:0; }
+.wpc-field label { font-size:13px; font-weight:500; color:#3c434a; padding-top:6px; }
+.wpc-field .wpc-desc { font-size:12px; color:#757575; margin-top:4px; line-height:1.5; }
+.wpc-field input[type=text], .wpc-field input[type=password], .wpc-field input[type=number],
+.wpc-field input[type=url], .wpc-field select, .wpc-field textarea {
+    width:100%; max-width:400px; box-sizing:border-box; font-size:13px; }
+.wpc-field textarea { font-family:monospace; font-size:12px; resize:vertical; min-height:100px; max-width:none; }
+.wpc-toggle-row { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
+.wpc-toggle-row input[type=checkbox] { margin-top:2px; flex-shrink:0; }
+.wpc-toggle-row label { font-size:13px; color:#3c434a; cursor:pointer; }
+.wpc-toggle-row .wpc-desc { font-size:12px; color:#757575; margin-top:2px; }
+.wpc-toggle-big { display:flex; align-items:center; justify-content:space-between;
+                   border:1px solid #dcdcde; border-radius:6px; padding:14px 16px; margin-bottom:14px;
+                   background:#fafafa; transition:border-color .15s; }
+.wpc-toggle-big:has(input:checked) { border-color:#2271b1; background:#f0f6fc; }
+.wpc-toggle-big-info { flex:1; }
+.wpc-toggle-big-info strong { font-size:13px; color:#1d2327; display:block; margin-bottom:2px; }
+.wpc-toggle-big-info span { font-size:12px; color:#757575; }
+.wpc-stat-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+.wpc-stat { flex:1; min-width:120px; background:#f6f7f7; border:1px solid #dcdcde; border-radius:6px;
+            padding:12px 16px; text-align:center; }
+.wpc-stat .val { font-size:22px; font-weight:700; color:#2271b1; display:block; }
+.wpc-stat .lbl { font-size:11px; color:#757575; text-transform:uppercase; letter-spacing:.4px; }
+.wpc-stat.warn .val { color:#c0392b; }
+.wpc-inline-btn { background:#fff; border:1px solid #2271b1; color:#2271b1; padding:5px 12px;
+                  font-size:12px; border-radius:4px; cursor:pointer; font-weight:500; transition:background .12s; }
+.wpc-inline-btn:hover { background:#2271b1; color:#fff; }
+.wpc-inline-btn.success { border-color:#0a8a3c; color:#0a8a3c; }
+.wpc-inline-btn.danger  { border-color:#c0392b; color:#c0392b; }
+.wpc-inline-btn.danger:hover { background:#c0392b; color:#fff; }
+.wpc-provider-card { display:flex; align-items:center; gap:12px; border:1px solid #dcdcde; border-radius:6px;
+                     padding:12px 16px; margin-bottom:8px; cursor:pointer; transition:border-color .15s; }
+.wpc-provider-card:has(input:checked) { border-color:#2271b1; background:#f0f6fc; }
+.wpc-provider-card input { flex-shrink:0; }
+.wpc-provider-card .prov-name { font-size:13px; font-weight:600; color:#1d2327; }
+.wpc-provider-card .prov-desc { font-size:12px; color:#757575; }
+.wpc-roles-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+.wpc-role-item { display:flex; align-items:center; gap:6px; font-size:12px; color:#3c434a; }
+.wpc-anon-tag { display:inline-block; background:#fff3cd; border:1px solid #ffc107; color:#856404;
+                font-size:11px; padding:1px 7px; border-radius:20px; margin:2px; font-family:monospace; }
+.wpc-section-divider { border:none; border-top:1px solid #f0f0f0; margin:16px 0; }
+
+/* Privacy: radio group */
+.wpc-radio-group { display:flex; flex-direction:column; gap:0; margin-bottom:4px; }
+.wpc-radio-opt { display:flex; align-items:flex-start; gap:12px; padding:13px 16px;
+                 border:1px solid #dcdcde; border-bottom:none; background:#fff; cursor:pointer;
+                 transition:background .12s, border-color .12s; }
+.wpc-radio-opt:first-child { border-radius:6px 6px 0 0; }
+.wpc-radio-opt:last-child  { border-bottom:1px solid #dcdcde; border-radius:0 0 6px 6px; }
+.wpc-radio-opt:hover { background:#f9fafb; }
+.wpc-radio-opt:has(input:checked) { background:#f0f6fc; border-color:#2271b1;
+                                     position:relative; z-index:1; }
+.wpc-radio-opt:has(input:checked)+.wpc-radio-opt { border-top-color:#2271b1; }
+.wpc-radio-opt input[type=radio] { margin-top:2px; flex-shrink:0; accent-color:#2271b1; }
+.wpc-radio-opt .opt-body { flex:1; }
+.wpc-radio-opt .opt-title { font-size:13px; font-weight:600; color:#1d2327; }
+.wpc-radio-opt .opt-desc { font-size:12px; color:#757575; line-height:1.5; margin-top:2px; }
+.wpc-opt-badge { display:inline-block; font-size:10px; font-weight:600; padding:2px 8px;
+                 border-radius:3px; margin-top:5px; }
+.wpc-opt-badge.success { background:#dcfce7; color:#166534; }
+.wpc-opt-badge.warn    { background:#fef3c7; color:#92400e; }
+.wpc-opt-badge.danger  { background:#fee2e2; color:#991b1b; }
+.wpc-privacy-note { background:#f8f9fa; border:1px solid #e2e4e7; border-radius:6px;
+                    padding:14px 18px; font-size:12px; color:#3c434a; line-height:1.7; }
+.wpc-privacy-note strong { color:#1d2327; }
+.wpc-privacy-note code { background:#eef1f5; padding:1px 5px; border-radius:3px; font-size:11px; }
+.wpc-preset-bar { display:flex; align-items:center; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.wpc-preset-bar .p-label { font-size:12px; color:#757575; font-weight:500; }
+
+/* Performance: info bar */
+.wpc-db-bar { display:flex; gap:0; align-items:stretch; background:#fff;
+              border:1px solid #dcdcde; border-radius:6px; margin-bottom:16px;
+              overflow:hidden; }
+.wpc-db-bar .bar-item { flex:1; padding:12px 16px; text-align:center;
+                        border-right:1px solid #f0f0f1; }
+.wpc-db-bar .bar-item:last-child { border-right:none; }
+.wpc-db-bar .bar-val { font-size:16px; font-weight:700; color:#1d2327; display:block; }
+.wpc-db-bar .bar-val.green  { color:#166534; }
+.wpc-db-bar .bar-val.yellow { color:#b45309; }
+.wpc-db-bar .bar-val.red    { color:#991b1b; }
+.wpc-db-bar .bar-lbl { font-size:11px; color:#757575; text-transform:uppercase;
+                        letter-spacing:.3px; margin-top:2px; display:block; }
+
+/* Performance: recommendations */
+.wpc-rec-list { display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+.wpc-rec-item { display:flex; align-items:center; gap:12px; border:1px solid #e2e4e7;
+                border-radius:4px; padding:8px 12px; background:#fff; font-size:12px; }
+.wpc-rec-item:hover { border-color:#2271b1; }
+.wpc-rec-info { flex:1; }
+.wpc-rec-info strong { font-size:12px; color:#1d2327; display:block; }
+.wpc-rec-info span   { font-size:11px; color:#757575; }
+.wpc-rec-pattern { font-family:monospace; font-size:11px; background:#f0f6fc; color:#2271b1;
+                   padding:2px 8px; border-radius:3px; border:1px solid #c2d9f0; }
+.wpc-rec-count { font-size:11px; color:#999; white-space:nowrap; }
+.wpc-token-note { background:#fffbeb; border:1px solid #fde68a; border-radius:4px;
+                  padding:9px 14px; font-size:12px; color:#92400e; margin-bottom:14px; }

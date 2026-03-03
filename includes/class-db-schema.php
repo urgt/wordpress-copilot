@@ -24,6 +24,7 @@ class WPC_DB_Schema {
         WPC_Logger::log( 'Building fresh DB schema...' );
         global $wpdb;
 
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema introspection must use direct SHOW TABLES; cached via transient at higher level.
         $all_tables    = $wpdb->get_col( 'SHOW TABLES' );
         $excluded      = self::get_excluded_patterns();
         $max_tables    = (int) WPC_Settings::get( 'max_schema_tables', 80 );
@@ -49,8 +50,8 @@ class WPC_DB_Schema {
                            $prefix . 'terms', $prefix . 'termmeta', $prefix . 'term_taxonomy',
                            $prefix . 'term_relationships', $prefix . 'options', $prefix . 'comments' ];
         usort( $tables, function ( $a, $b ) use ( $core_prefixes ) {
-            $a_core = in_array( $a, $core_prefixes );
-            $b_core = in_array( $b, $core_prefixes );
+            $a_core = in_array( $a, $core_prefixes, true );
+            $b_core = in_array( $b, $core_prefixes, true );
             if ( $a_core && ! $b_core ) return -1;
             if ( ! $a_core && $b_core ) return 1;
             return strcmp( $a, $b );
@@ -70,10 +71,14 @@ class WPC_DB_Schema {
         }
 
         foreach ( $tables as $table ) {
+            // Validate table name against the allowlist before issuing DESCRIBE
+            if ( ! in_array( $table, $all_tables, true ) ) continue;
+
             $lines[] = '';
             $lines[] = "TABLE `{$table}`:";
 
-            $columns = $wpdb->get_results( "DESCRIBE `{$table}`" );
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- DESCRIBE introspects live schema; cached at higher level.
+            $columns = $wpdb->get_results( $wpdb->prepare( 'DESCRIBE `%i`', $table ) );
             if ( $columns ) {
                 foreach ( $columns as $col ) {
                     // Skip anonymized columns from schema
@@ -84,11 +89,6 @@ class WPC_DB_Schema {
                     if ( $col->Key         ) $parts .= " [{$col->Key}]";
                     $lines[] = $parts;
                 }
-            }
-
-            if ( false ) {
-                $count = $wpdb->get_var( "SELECT COUNT(*) FROM `{$table}`" );
-                $lines[] = "  (~{$count} rows)";
             }
         }
 
