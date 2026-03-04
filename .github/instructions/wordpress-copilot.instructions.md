@@ -134,6 +134,6 @@ public static function handle_action_name() {
 ## 9. Git & Release
 
 - Commit messages: imperative mood, ≤ 72 chars subject
-- Always include: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
+- Never include: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
 - Version bumps: update plugin header, `DQA_VERSION` constant, **and** `readme.txt` Stable tag — all three
 - Do not commit: `vendor/`, `node_modules/`, `.env`, debug logs
