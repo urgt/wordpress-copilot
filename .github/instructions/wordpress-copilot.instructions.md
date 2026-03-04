@@ -8,7 +8,7 @@
 ## 1. Plugin Identity
 
 - **Plugin slug / folder**: `data-query-assistant`
-- **Class / constant prefix**: `WPC_` | **function / hook / option / CSS / JS prefix**: `wpc_`
+- **Class / constant prefix**: `DQA_` | **function / hook / option / CSS / JS prefix**: `dqa_`
 - **Text Domain**: `data-query-assistant`
 - **Min WP**: 6.2 | **Min PHP**: 8.0
 - **PHPCS**: `phpcs.xml` in project root — run `vendor/bin/phpcs` before every commit; zero errors required
@@ -17,12 +17,12 @@
 
 ## 2. Naming Conventions
 
-- Classes: `WPC_Some_Class` (uppercase words, underscores)
-- Constants: `WPC_UPPER_SNAKE` — e.g., `WPC_VERSION`
+- Classes: `DQA_Some_Class` (uppercase words, underscores)
+- Constants: `DQA_UPPER_SNAKE` — e.g., `DQA_VERSION`
 - Methods / functions: `snake_case`
-- Hooks: `wpc_` prefix — e.g., `wpc_before_query`, `wpc_chat_response`
-- CSS classes: `wpc-` prefix — e.g., `wpc-panel`, `wpc-messages`
-- JS globals / handles: `wpc-` or `wpc_` — e.g., `wpc-chat-js`, `wpcChat`
+- Hooks: `dqa_` prefix — e.g., `dqa_before_query`, `dqa_chat_response`
+- CSS classes: `dqa-` prefix — e.g., `dqa-panel`, `dqa-messages`
+- JS globals / handles: `dqa-` or `dqa_` — e.g., `dqa-chat-js`, `dqaChat`
 - File names: `class-{slug}.php` for class files, kebab-case otherwise
 
 ---
@@ -35,7 +35,7 @@ General security rules (nonces, capability checks, sanitization, escaping, SQL) 
 Project-specific suppression rules only:
 
 - `phpcs:ignore WordPress.Security.NonceVerification` — only when nonce is verified in a wrapper/caller; always add a justification comment
-- `phpcs:ignore WordPress.DB.DirectDatabaseQuery` — only for legitimate queries against `copilot_*` custom tables
+- `phpcs:ignore WordPress.DB.DirectDatabaseQuery` — only for legitimate queries against `dqa_*` custom tables
 - `phpcs:ignore WordPress.DB.PreparedSQL` — only when the query is provably safe (e.g., table name from `$wpdb->prefix`)
 
 ---
@@ -47,11 +47,11 @@ Project-specific suppression rules only:
 - Static methods + `init()` for service classes (existing codebase pattern)
 - Private/protected internals; public only for API surface
 
-### AJAX pattern (WPC-specific)
+### AJAX pattern (DQA-specific)
 
 ```php
 public static function register_ajax() {
-    add_action( 'wp_ajax_wpc_action_name', [ __CLASS__, 'handle_action_name' ] );
+    add_action( 'wp_ajax_dqa_action_name', [ __CLASS__, 'handle_action_name' ] );
 }
 
 public static function handle_action_name() {
@@ -65,16 +65,16 @@ public static function handle_action_name() {
 ```
 
 ### Database
-- Custom table names: `$wpdb->prefix . 'copilot_*'` — e.g., `wp_copilot_logs`, `wp_copilot_chats`
+- Custom table names: `$wpdb->prefix . 'dqa_*'` — e.g., `wp_dqa_logs`, `wp_dqa_chats`
 - Create tables in activation hook via `dbDelta()`
 - Drop tables + delete options + delete transients in `uninstall.php`
 
 ### Enqueue
-- Version parameter: always `WPC_VERSION`
+- Version parameter: always `DQA_VERSION`
 - Admin assets: load only on plugin pages (check `$hook_suffix`)
 
 ### Error handling
-- Log via `WPC_Logger` — never expose internal errors to users
+- Log via `DQA_Logger` — never expose internal errors to users
 - AJAX errors: `wp_send_json_error( [ 'message' => esc_html__( '...', 'data-query-assistant' ) ] )`
 - Plugin must never cause a white screen
 
@@ -94,8 +94,8 @@ public static function handle_action_name() {
 ## 6. CSS / JavaScript
 
 ### CSS
-- All custom classes: `wpc-` prefix
-- Theming via CSS custom properties: `--wpc-*`
+- All custom classes: `dqa-` prefix
+- Theming via CSS custom properties: `--dqa-*`
 - Animations: `transform` and `opacity` only (compositor-friendly)
 - No `filter: blur()` on animated elements — use pre-blurred gradients
 - No `!important` unless overriding WP admin styles (document why)
@@ -109,7 +109,7 @@ public static function handle_action_name() {
   })(jQuery);
   ```
 - Always send `_ajax_nonce` with every `$.ajax()` request
-- `localStorage` keys: `wpc_` prefix
+- `localStorage` keys: `dqa_` prefix
 - Debounce/throttle scroll, resize, and input handlers
 
 ---
@@ -135,5 +135,5 @@ public static function handle_action_name() {
 
 - Commit messages: imperative mood, ≤ 72 chars subject
 - Always include: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
-- Version bumps: update plugin header, `WPC_VERSION` constant, **and** `readme.txt` Stable tag — all three
+- Version bumps: update plugin header, `DQA_VERSION` constant, **and** `readme.txt` Stable tag — all three
 - Do not commit: `vendor/`, `node_modules/`, `.env`, debug logs
