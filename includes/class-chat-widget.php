@@ -574,18 +574,46 @@ class DQA_Chat_Widget {
 			$sql         = $ai_result['sql'];
 			$explanation = $ai_result['explanation'] ?? '';
 
-			// Execute
+			// Execute.
 			$rows = DQA_Query_Executor::execute( $sql );
 
 			if ( is_wp_error( $rows ) ) {
 				self::sse_push(
 					'error',
 					$rows->get_error_message(),
-					[
+					array(
 						'sql' => DQA_Settings::get( 'show_sql' ) ? $sql : null,
-					]
+					)
 				);
 				die();
+			}
+
+			// ── Auto-retry on empty results ────────────────────────
+			// If the query returned 0 rows, ask the LLM to try a different approach.
+			if ( empty( $rows ) ) {
+				self::sse_push( 'status', __( 'No results — retrying with a different approach…', 'data-query-assistant' ) );
+				DQA_Logger::log( 'Auto-retry: first query returned 0 rows. SQL: ' . mb_strimwidth( $sql, 0, 200 ) );
+
+				$retry_prompt = $engine->build_empty_result_retry_prompt( $user_query, $sql, $schema );
+				$retry_result = $engine->generate_sql( $retry_prompt, $schema, null );
+
+				if ( ! is_wp_error( $retry_result ) && ! empty( $retry_result['sql'] ) && $retry_result['sql'] !== $sql ) {
+					$retry_sql = $retry_result['sql'];
+					DQA_Logger::log( 'Auto-retry SQL: ' . mb_strimwidth( $retry_sql, 0, 200 ) );
+
+					$retry_rows = DQA_Query_Executor::execute( $retry_sql );
+
+					if ( ! is_wp_error( $retry_rows ) && ! empty( $retry_rows ) ) {
+						$sql         = $retry_sql;
+						$explanation = $retry_result['explanation'] ?? $explanation;
+						$rows        = $retry_rows;
+						DQA_Logger::log( 'Auto-retry succeeded: ' . count( $rows ) . ' rows.' );
+					} else {
+						DQA_Logger::log( 'Auto-retry also returned 0 rows or error — using original result.' );
+					}
+				} else {
+					DQA_Logger::log( 'Auto-retry: LLM returned same SQL or error — keeping original result.' );
+				}
 			}
 
 			self::sse_push( 'status', __( 'Analyzing results…', 'data-query-assistant' ) );

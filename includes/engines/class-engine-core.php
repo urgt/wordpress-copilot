@@ -516,6 +516,13 @@ abstract class DQA_Engine_Core {
 				'',
 				'## 6.2 Order Architecture',
 				'',
+				'⚠⚠⚠ CRITICAL DECISION: Before writing ANY order query, you MUST:',
+				'1. Look for "HPOS is ACTIVE" or "HPOS is DISABLED" in the schema.',
+				'2. If HPOS is ACTIVE → use wp_wc_orders + wp_wc_order_addresses. NEVER wp_posts for orders.',
+				'3. If HPOS is DISABLED → use wp_posts + wp_postmeta. NEVER wp_wc_orders (may be empty).',
+				'4. If no HPOS hint → default to wp_posts + wp_postmeta (safest legacy approach).',
+				'5. For customer identification: prefer _billing_email (always populated) over _customer_user (may be 0 for guests).',
+				'',
 				'### CPT mode (HPOS DISABLED — legacy, still common):',
 				'Orders:   wp_posts WHERE post_type = \'shop_order\'',
 				'Refunds:  wp_posts WHERE post_type = \'shop_order_refund\', post_parent = order ID',
@@ -646,6 +653,10 @@ abstract class DQA_Engine_Core {
 				'✗ WRONG: Using wp_posts for orders when HPOS is ACTIVE',
 				'✓ RIGHT: Read the HPOS hint in the schema and use the correct tables',
 				'',
+				'✗ WRONG: INNER JOIN on _customer_user to find customers (returns 0 rows if guests or value = 0)',
+				'✓ RIGHT: Group orders by _billing_email (always populated for all orders, guests and registered users)',
+				'  Alternative: use _billing_first_name + _billing_last_name if email is not needed',
+				'',
 				'✗ WRONG: WHERE um.meta_value = \'a:1:{s:13:"administrator";b:1;}\'',
 				'  (serialized format varies — never match exact serialized string)',
 				'✓ RIGHT: WHERE um.meta_value LIKE \'%"administrator"%\'',
@@ -762,16 +773,34 @@ abstract class DQA_Engine_Core {
 				'WHERE um.meta_value LIKE \'%"customer"%\'',
 				'ORDER BY u.user_registered DESC LIMIT ' . $max . ';',
 				'',
-				'# 10. WooCommerce customers with order count and total spent',
-				'SELECT u.ID, u.user_email, u.display_name,',
+				'# 10. Top customers by lifetime spending (CPT mode — PREFERRED approach using billing meta)',
+				'# NOTE: Group by _billing_email, not _customer_user, because _customer_user = 0 for guest orders.',
+				'SELECT',
+				'  pm_fname.meta_value AS first_name,',
+				'  pm_lname.meta_value AS last_name,',
+				'  pm_email.meta_value AS email,',
 				'  COUNT(DISTINCT o.ID) AS order_count,',
 				'  SUM(CAST(pm_total.meta_value AS DECIMAL(10,2))) AS total_spent',
-				'FROM wp_users u',
-				"INNER JOIN wp_posts o ON o.post_type = 'shop_order' AND o.post_status IN ('wc-completed','wc-processing')",
-				'INNER JOIN wp_postmeta pm_cust ON pm_cust.post_id = o.ID AND pm_cust.meta_key = \'_customer_user\'',
-				'  AND CAST(pm_cust.meta_value AS UNSIGNED) = u.ID',
-				'LEFT JOIN wp_postmeta pm_total ON pm_total.post_id = o.ID AND pm_total.meta_key = \'_order_total\'',
-				'GROUP BY u.ID ORDER BY total_spent DESC LIMIT ' . $max . ';',
+				'FROM wp_posts o',
+				"  INNER JOIN wp_postmeta pm_email ON pm_email.post_id = o.ID AND pm_email.meta_key = '_billing_email'",
+				"  LEFT JOIN wp_postmeta pm_fname ON pm_fname.post_id = o.ID AND pm_fname.meta_key = '_billing_first_name'",
+				"  LEFT JOIN wp_postmeta pm_lname ON pm_lname.post_id = o.ID AND pm_lname.meta_key = '_billing_last_name'",
+				"  LEFT JOIN wp_postmeta pm_total ON pm_total.post_id = o.ID AND pm_total.meta_key = '_order_total'",
+				"WHERE o.post_type = 'shop_order' AND o.post_status IN ('wc-completed','wc-processing')",
+				'GROUP BY pm_email.meta_value, pm_fname.meta_value, pm_lname.meta_value',
+				'ORDER BY total_spent DESC LIMIT ' . $max . ';',
+				'',
+				'# 10b. Top customers by lifetime spending (HPOS mode)',
+				'# Use when schema says "HPOS is ACTIVE".',
+				'SELECT',
+				'  a.first_name, a.last_name, a.email,',
+				'  COUNT(DISTINCT o.id) AS order_count,',
+				'  SUM(o.total_amount) AS total_spent',
+				'FROM wp_wc_orders o',
+				"  LEFT JOIN wp_wc_order_addresses a ON a.order_id = o.id AND a.address_type = 'billing'",
+				"WHERE o.status IN ('wc-completed','wc-processing') AND o.type = 'shop_order'",
+				'GROUP BY a.email, a.first_name, a.last_name',
+				'ORDER BY total_spent DESC LIMIT ' . $max . ';',
 				'',
 				'# 11. Media library (images)',
 				'SELECT p.ID, p.post_title AS filename, p.post_mime_type AS type,',
@@ -1087,6 +1116,62 @@ abstract class DQA_Engine_Core {
 	}
 
 	/* ── Token getters ──────────────────────────────────────────── */
+
+	/**
+	 * Builds a retry prompt when the previous SQL returned 0 rows.
+	 *
+	 * Instructs the LLM to analyse WHY the query returned nothing and try
+	 * a fundamentally different approach (different tables, JOINs, meta_keys,
+	 * HPOS vs CPT, etc.).
+	 *
+	 * @param string $original_question User's original natural language question.
+	 * @param string $failed_sql        The SQL that returned 0 rows.
+	 * @param string $schema            Current DB schema prompt.
+	 * @return string User prompt for the retry LLM call.
+	 */
+	public function build_empty_result_retry_prompt( string $original_question, string $failed_sql, string $schema ): string {
+		return implode(
+			"\n",
+			array(
+				'AUTOMATIC RETRY — PREVIOUS QUERY RETURNED 0 ROWS',
+				'',
+				'The following SQL was executed but returned NO results:',
+				'```sql',
+				$failed_sql,
+				'```',
+				'',
+				'Original user question: ' . $original_question,
+				'',
+				'ANALYSIS — Common reasons the query returned 0 rows:',
+				'1. HPOS vs CPT mismatch: orders queried from wp_posts but stored in wp_wc_orders (or vice versa). CHECK THE SCHEMA HPOS HINT.',
+				'2. Wrong meta_key: _customer_user may be empty while _billing_email exists | _order_value instead of _order_total | etc.',
+				'3. Wrong post_status: used "completed" instead of "wc-completed" | missed "wc-processing".',
+				'4. Wrong post_type: "product" vs "product_variation" | "shop_order" vs "shop_order_refund".',
+				'5. JOIN too restrictive: INNER JOIN on meta that does not exist for all rows — use LEFT JOIN.',
+				'6. Empty JOIN result: _customer_user = 0 or blank for guest orders.',
+				'7. Table does not exist: plugin table was assumed but not present in schema.',
+				'8. WooCommerce HPOS migration: some sites have orders ONLY in wc_orders, not in wp_posts.',
+				'',
+				'YOUR TASK:',
+				'1. Identify the MOST LIKELY reason from the list above.',
+				'2. Write a FUNDAMENTALLY DIFFERENT SQL query — do NOT just tweak the old one.',
+				'3. Specific strategies to try:',
+				'   - If query used wp_posts + wp_postmeta for orders → try wp_wc_orders (if in schema).',
+				'   - If query used wp_wc_orders → try wp_posts + wp_postmeta (CPT fallback).',
+				'   - If query JOINed on _customer_user → try grouping by _billing_email or _billing_first_name + _billing_last_name instead.',
+				'   - If query used INNER JOIN → switch to LEFT JOIN.',
+				'   - If query filtered by specific post_status values → try without status filter first to confirm data exists.',
+				'   - For WooCommerce HPOS: billing data is in wp_wc_order_addresses (address_type="billing"), not postmeta.',
+				'',
+				'CRITICAL RULES:',
+				'- Return {"mode":"direct","sql":"...","explanation":"..."}.',
+				'- The explanation MUST mention what was wrong with the previous approach.',
+				'- Do NOT return the same SQL or a minor variation of it.',
+				'- Check the SCHEMA below for available tables and HPOS status before writing the query.',
+				'- If you are genuinely certain the data does not exist, return: {"mode":"direct","sql":"SELECT \'No matching data in this database\' AS message","explanation":"..."}',
+			)
+		);
+	}
 
 	/**
 	 * Get the AI model identifier.

@@ -268,7 +268,19 @@ class DQA_DB_Schema {
 			}
 		}
 
-		// ── Section 5: Detected plugin data hints ─────────────────
+		// ── Section 5: Active plugins list ────────────────────────
+		$active_plugins = self::build_active_plugins_list();
+		if ( ! empty( $active_plugins ) ) {
+			$lines[] = '';
+			$lines[] = '## SECTION: ACTIVE PLUGINS (' . count( $active_plugins ) . ')';
+			$lines[] = 'These plugins are currently active on this WordPress site.';
+			$lines[] = 'Consider their data storage patterns when generating queries.';
+			foreach ( $active_plugins as $plugin_name ) {
+				$lines[] = '  - ' . $plugin_name;
+			}
+		}
+
+		// ── Section 6: Detected plugin data hints ─────────────────
 		$plugin_hints = self::build_plugin_hints( $prefix );
 		if ( ! empty( $plugin_hints ) ) {
 			$lines[] = '';
@@ -313,6 +325,46 @@ class DQA_DB_Schema {
 	 */
 	public static function flush_cache(): void {
 		delete_transient( self::CACHE_KEY );
+	}
+
+	/* ── Active plugins list ────────────────────────────────────── */
+
+	/**
+	 * Returns a clean list of human-readable active plugin names.
+	 *
+	 * Uses get_plugins() to resolve file paths to plugin Name headers.
+	 * Falls back to slug derivation if plugin data is unavailable.
+	 *
+	 * @return string[]
+	 */
+	private static function build_active_plugins_list(): array {
+		$active  = (array) get_option( 'active_plugins', array() );
+		$network = is_multisite() ? array_keys( (array) get_site_option( 'active_sitewide_plugins', array() ) ) : array();
+		$all     = array_unique( array_merge( $active, $network ) );
+
+		if ( empty( $all ) ) {
+			return array();
+		}
+
+		// Load plugin data for name resolution.
+		if ( ! function_exists( 'get_plugins' ) ) {
+			require_once ABSPATH . 'wp-admin/includes/plugin.php';
+		}
+		$all_plugins = get_plugins();
+
+		$names = array();
+		foreach ( $all as $plugin_file ) {
+			if ( isset( $all_plugins[ $plugin_file ]['Name'] ) ) {
+				$names[] = $all_plugins[ $plugin_file ]['Name'];
+			} else {
+				// Fallback: derive name from directory slug.
+				$slug    = dirname( $plugin_file );
+				$names[] = ( '.' === $slug ) ? basename( $plugin_file, '.php' ) : $slug;
+			}
+		}
+
+		sort( $names );
+		return $names;
 	}
 
 	/* ── Plugin-aware hint blocks ───────────────────────────────── */
