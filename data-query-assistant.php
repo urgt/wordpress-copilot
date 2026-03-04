@@ -24,6 +24,7 @@ define( 'DQA_TIMEOUT', 90 );
 /* ── Autoload ────────────────────────────────────────────────────── */
 require_once DQA_PATH . 'includes/class-logger.php';
 require_once DQA_PATH . 'includes/class-settings.php';
+require_once DQA_PATH . 'includes/class-feature-gates.php';
 require_once DQA_PATH . 'includes/class-db-schema.php';
 require_once DQA_PATH . 'includes/class-query-executor.php';
 require_once DQA_PATH . 'includes/engines/class-engine-core.php';
@@ -32,6 +33,10 @@ require_once DQA_PATH . 'includes/engines/class-engine-openai.php';
 require_once DQA_PATH . 'includes/engines/class-engine-google.php';
 require_once DQA_PATH . 'includes/engines/class-engine-factory.php';
 require_once DQA_PATH . 'includes/class-chat-storage.php';
+require_once DQA_PATH . 'includes/class-saved-queries.php';
+require_once DQA_PATH . 'includes/class-report-scheduler.php';
+require_once DQA_PATH . 'includes/class-alert-rules.php';
+require_once DQA_PATH . 'includes/class-dashboards.php';
 require_once DQA_PATH . 'includes/class-chat-widget.php';
 
 /* ── Bootstrap ───────────────────────────────────────────────────── */
@@ -40,7 +45,15 @@ add_action(
 	function () {
 		DQA_Settings::init();
 		DQA_Chat_Storage::register_ajax();
+		DQA_Saved_Queries::register_ajax();
+		DQA_Report_Scheduler::init();
+		DQA_Alert_Rules::init();
+		DQA_Dashboards::init();
 		DQA_Chat_Widget::init();
+		if ( ! get_option( 'dqa_saved_queries_table_ready' ) ) {
+			DQA_Saved_Queries::create_table();
+			update_option( 'dqa_saved_queries_table_ready', '1', false );
+		}
 
 		// Suppress WP DB error output for AJAX requests — nonce is verified in each handler.
     // phpcs:ignore WordPress.Security.NonceVerification.Missing
@@ -92,6 +105,10 @@ register_activation_hook(
 		);
 
 		DQA_Chat_Storage::create_table();
+		DQA_Saved_Queries::create_table();
+		update_option( 'dqa_saved_queries_table_ready', '1', false );
+		DQA_Report_Scheduler::ensure_schedule();
+		DQA_Alert_Rules::ensure_schedule();
 		DQA_DB_Schema::flush_cache();
 	}
 );
@@ -99,6 +116,8 @@ register_activation_hook(
 register_deactivation_hook(
 	__FILE__,
 	function () {
+		DQA_Report_Scheduler::clear_schedule();
+		DQA_Alert_Rules::clear_schedule();
 		DQA_DB_Schema::flush_cache();
 	}
 );

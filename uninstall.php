@@ -15,7 +15,9 @@ global $wpdb;
 // Drop plugin tables.
 $wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->prefix}dqa_logs`" );  // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 $wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->prefix}dqa_chats`" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+$wpdb->query( "DROP TABLE IF EXISTS `{$wpdb->prefix}dqa_saved_queries`" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 
 // Delete plugin options and transients.
 delete_option( 'dqa_settings_v2' );
+delete_option( 'dqa_saved_queries_table_ready' );
 delete_transient( 'dqa_schema_v2' );

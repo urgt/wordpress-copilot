@@ -73,6 +73,11 @@ class DQA_Chat_Widget {
 				'streaming'     => (bool) DQA_Settings::get( 'streaming', true ),
 				'enableVoice'   => (bool) DQA_Settings::get( 'enable_voice' ),
 				'showSql'       => (bool) DQA_Settings::get( 'show_sql' ),
+				'features'      => [
+					'savedQueries' => DQA_Feature_Gates::is_enabled( 'saved_queries' ),
+					'csvExport'    => DQA_Feature_Gates::is_enabled( 'csv_export' ),
+					'queryHealth'  => DQA_Feature_Gates::is_enabled( 'query_health' ),
+				],
 				'provider'      => $provider_label,
 				'providerKey'   => $provider_key,
 				'providerLabel' => $provider_label,
@@ -92,20 +97,74 @@ class DQA_Chat_Widget {
 					'deleteChat'        => __( 'Delete chat', 'data-query-assistant' ),
 					'confirmDeleteChat' => __( 'Delete this chat?', 'data-query-assistant' ),
 					'emptyChat'         => __( 'Start a new conversation to keep context.', 'data-query-assistant' ),
+					'templates'         => __( 'Templates', 'data-query-assistant' ),
+					'saveQuery'         => __( 'Save query', 'data-query-assistant' ),
+					'exportCsv'         => __( 'Export CSV', 'data-query-assistant' ),
+					'querySaved'        => __( 'Saved.', 'data-query-assistant' ),
+					'noSavedQueries'    => __( 'No saved queries yet. Use "Save query" to save one.', 'data-query-assistant' ),
+					'confirmDeleteSaved'=> __( 'Delete this saved query?', 'data-query-assistant' ),
+					'savedTab'          => __( 'Saved', 'data-query-assistant' ),
+					'applyQuery'        => __( 'Apply', 'data-query-assistant' ),
+					'editTitle'         => __( 'Rename', 'data-query-assistant' ),
+					'saveAsTemplate'    => __( 'Save as reusable template', 'data-query-assistant' ),
+					'featureLocked'     => __( 'This feature is available in Pro mode.', 'data-query-assistant' ),
+					'slowQuery'         => __( 'Slow query', 'data-query-assistant' ),
+					'hitRowLimit'       => __( 'Result hit row limit', 'data-query-assistant' ),
+					'highTokenUsage'    => __( 'High token usage', 'data-query-assistant' ),
+					'pipelineAgentic'   => __( 'Deep', 'data-query-assistant' ),
+					'pipelineSimple'    => __( 'Fast', 'data-query-assistant' ),
+					'pipelineAgenticTitle' => __( 'Deep mode: AI discovers your data first, then generates accurate SQL (2 LLM calls)', 'data-query-assistant' ),
+					'pipelineSimpleTitle'  => __( 'Fast mode: AI generates SQL directly in one call', 'data-query-assistant' ),
+					'confirmClearChat'  => __( 'Clear all messages in this chat? This cannot be undone.', 'data-query-assistant' ),
+					'confirmDeleteChat' => __( 'Delete this chat? All messages will be lost.', 'data-query-assistant' ),
+					'clearChatTitle'    => __( 'Clear chat', 'data-query-assistant' ),
+					'deleteChatTitle'   => __( 'Delete chat', 'data-query-assistant' ),
 					'voiceStart'        => __( 'Listening… speak now', 'data-query-assistant' ),
 					'noVoice'           => __( 'Voice input is not supported in this browser.', 'data-query-assistant' ),
 					'noApiKey'          => __( 'API key not configured', 'data-query-assistant' ),
 					'noApiKeyMsg'       => __( 'To use Data Query Assistant, add your AI provider API key in plugin settings.', 'data-query-assistant' ),
 					'goToSettings'      => __( 'Open Settings', 'data-query-assistant' ),
-					'examples'          => [
-						__( '🛒 Top 10 best-selling products this month', 'data-query-assistant' ),
-						__( '📦 Products with stock below 5 units', 'data-query-assistant' ),
-						__( '👥 New users registered this week', 'data-query-assistant' ),
-						__( '💰 Total revenue last 30 days', 'data-query-assistant' ),
-						__( '🔁 Orders with status "on-hold"', 'data-query-assistant' ),
-						__( '🏷️ Products without a featured image', 'data-query-assistant' ),
-						__( '📊 Orders per day for the last 7 days', 'data-query-assistant' ),
-						__( '👤 Customers who ordered more than 3 times', 'data-query-assistant' ),
+					'example_groups'    => [
+						[
+							'group' => __( '🛒 Store', 'data-query-assistant' ),
+							'items' => [
+								__( 'Top 10 best-selling products this month', 'data-query-assistant' ),
+								__( 'Monthly revenue for the last 12 months', 'data-query-assistant' ),
+								__( 'Top 10 customers by lifetime spending', 'data-query-assistant' ),
+								__( 'Customers with no orders in the last 90 days', 'data-query-assistant' ),
+								__( 'Products with zero sales in the last 30 days', 'data-query-assistant' ),
+							],
+						],
+						[
+							'group' => __( '📝 Content', 'data-query-assistant' ),
+							'items' => [
+								__( 'Top 10 most commented posts', 'data-query-assistant' ),
+								__( 'Scheduled posts in the next 14 days', 'data-query-assistant' ),
+								__( 'Draft posts not updated in the last 30 days', 'data-query-assistant' ),
+								__( 'Posts per author published this year', 'data-query-assistant' ),
+								__( 'Posts with no tags', 'data-query-assistant' ),
+							],
+						],
+						[
+							'group' => __( '👥 Growth', 'data-query-assistant' ),
+							'items' => [
+								__( 'New user registrations by day for the last 30 days', 'data-query-assistant' ),
+								__( 'Customers who ordered 3 or more times', 'data-query-assistant' ),
+								__( 'Users registered but never placed an order', 'data-query-assistant' ),
+								__( 'Most used coupon codes this month', 'data-query-assistant' ),
+								__( 'Average order value by month this year', 'data-query-assistant' ),
+							],
+						],
+						[
+							'group' => __( '⚡ Site Health', 'data-query-assistant' ),
+							'items' => [
+								__( 'Top 20 largest autoloaded options', 'data-query-assistant' ),
+								__( 'Posts with the most revisions', 'data-query-assistant' ),
+								__( 'Orders stuck in pending status', 'data-query-assistant' ),
+								__( 'Scheduled WordPress cron tasks', 'data-query-assistant' ),
+								__( 'Users with administrator role', 'data-query-assistant' ),
+							],
+						],
 					],
 				],
 			]
@@ -134,11 +193,19 @@ class DQA_Chat_Widget {
 			<div id="dqa-panel">
 				<div class="dqa-layout">
 					<aside class="dqa-sidebar">
-						<div class="dqa-sidebar-head">
-							<span class="dqa-sidebar-title"><?php esc_html_e( 'Chats', 'data-query-assistant' ); ?></span>
-							<button id="dqa-new-chat" type="button" class="dqa-new-chat-btn"><?php esc_html_e( '+ New', 'data-query-assistant' ); ?></button>
+						<div class="dqa-sidebar-tabs">
+							<button type="button" class="dqa-sidebar-tab active" data-sidebar-tab="chats"><?php esc_html_e( 'Chats', 'data-query-assistant' ); ?></button>
+							<button type="button" class="dqa-sidebar-tab" data-sidebar-tab="saved"><?php esc_html_e( 'Saved', 'data-query-assistant' ); ?></button>
 						</div>
-						<div id="dqa-chat-list"></div>
+						<div class="dqa-sidebar-pane" id="dqa-pane-chats">
+							<div class="dqa-sidebar-head">
+								<button id="dqa-new-chat" type="button" class="dqa-new-chat-btn"><?php esc_html_e( '+ New', 'data-query-assistant' ); ?></button>
+							</div>
+							<div id="dqa-chat-list"></div>
+						</div>
+						<div class="dqa-sidebar-pane dqa-hidden" id="dqa-pane-saved">
+							<div id="dqa-saved-list"></div>
+						</div>
 					</aside>
 
 					<div class="dqa-main">
@@ -181,6 +248,11 @@ class DQA_Chat_Widget {
 										</button>
 										<ul class="dqa-model-dropdown" id="dqa-model-dropdown"></ul>
 									</div>
+									<button type="button" class="dqa-pipeline-toggle is-simple" id="dqa-pipeline-toggle" title="">
+										<span class="dqa-pt-opt dqa-pt-fast"><?php esc_html_e( 'Fast', 'data-query-assistant' ); ?></span>
+										<span class="dqa-pt-track"><span class="dqa-pt-thumb"></span></span>
+										<span class="dqa-pt-opt dqa-pt-deep"><?php esc_html_e( 'Deep', 'data-query-assistant' ); ?></span>
+									</button>
 								</div>
 								<div class="dqa-send-group">
 									<button id="dqa-voice" class="dqa-icon-btn dqa-voice-btn" title="<?php echo esc_attr( __( 'Voice input', 'data-query-assistant' ) ); ?>" style="display:none">
@@ -276,6 +348,46 @@ class DQA_Chat_Widget {
 						</div>
 					</div>
 				</div>
+				<!-- Save Query Modal -->
+				<div id="dqa-save-modal" class="dqa-modal" style="display:none" role="dialog" aria-modal="true">
+					<div class="dqa-modal-card">
+						<div class="dqa-modal-header">
+							<span class="dqa-modal-title"><?php esc_html_e( 'Save Query', 'data-query-assistant' ); ?></span>
+							<button type="button" class="dqa-modal-close" id="dqa-save-modal-cancel" aria-label="<?php esc_attr_e( 'Close', 'data-query-assistant' ); ?>">
+								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+							</button>
+						</div>
+						<div class="dqa-modal-body">
+							<div class="dqa-modal-field">
+								<label for="dqa-save-title"><?php esc_html_e( 'Title', 'data-query-assistant' ); ?></label>
+								<input type="text" id="dqa-save-title" class="dqa-modal-input" maxlength="190" autocomplete="off">
+							</div>
+							<label class="dqa-modal-check">
+								<input type="checkbox" id="dqa-save-as-template">
+								<span><?php esc_html_e( 'Save as reusable template', 'data-query-assistant' ); ?></span>
+							</label>
+						</div>
+						<div class="dqa-modal-footer">
+							<button type="button" class="dqa-modal-btn-ghost" id="dqa-save-modal-cancel2"><?php esc_html_e( 'Cancel', 'data-query-assistant' ); ?></button>
+							<button type="button" class="dqa-modal-btn-primary" id="dqa-save-modal-confirm"><?php esc_html_e( 'Save', 'data-query-assistant' ); ?></button>
+						</div>
+					</div>
+				</div>
+
+				<div id="dqa-confirm-modal" class="dqa-modal" style="display:none" role="dialog" aria-modal="true">
+					<div class="dqa-modal-card dqa-modal-card--sm">
+						<div class="dqa-modal-header">
+							<span class="dqa-modal-title" id="dqa-confirm-title"><?php esc_html_e( 'Are you sure?', 'data-query-assistant' ); ?></span>
+						</div>
+						<div class="dqa-modal-body">
+							<p class="dqa-confirm-msg" id="dqa-confirm-msg"></p>
+						</div>
+						<div class="dqa-modal-footer">
+							<button type="button" class="dqa-modal-btn-ghost" id="dqa-confirm-cancel"><?php esc_html_e( 'Cancel', 'data-query-assistant' ); ?></button>
+							<button type="button" class="dqa-modal-btn-danger" id="dqa-confirm-ok"><?php esc_html_e( 'Delete', 'data-query-assistant' ); ?></button>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 		<?php
@@ -295,6 +407,7 @@ class DQA_Chat_Widget {
 		$user_query     = sanitize_textarea_field( wp_unslash( $_POST['query'] ?? '' ) );
 		$chat_context   = self::sanitize_context( wp_unslash( $_POST['context'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$selected_model = sanitize_text_field( wp_unslash( $_POST['model'] ?? '' ) );
+		$pipeline_mode  = sanitize_text_field( wp_unslash( $_POST['pipeline'] ?? 'agentic' ) );
 
 		// Engine
 		$engine = DQA_Engine_Factory::make( $selected_model );
@@ -311,11 +424,15 @@ class DQA_Chat_Widget {
 		// Schema
 		$schema = DQA_DB_Schema::get_schema_prompt();
 
-		// AI → SQL
-		$ai_result = self::generate_sql_with_retry(
+		// AI → SQL (agentic pipeline, no streaming in AJAX mode)
+		$ai_result = self::run_agentic_pipeline(
 			$engine,
-			self::build_sql_request_prompt( $user_query, $chat_context ),
-			$schema
+			$user_query,
+			$chat_context,
+			$schema,
+			null,
+			null,
+			$pipeline_mode
 		);
 
 		if ( is_wp_error( $ai_result ) ) {
@@ -342,6 +459,7 @@ class DQA_Chat_Widget {
 		$explanation = self::build_answer_with_data( $engine, $user_query, $sql, $rows, $explanation );
 		$formatted   = DQA_Query_Executor::format_results( $rows, $explanation );
 		$exec_ms     = (int) round( ( microtime( true ) - $start ) * 1000 );
+		$health      = self::build_query_health( $engine, $formatted['count'], $exec_ms );
 
 		// Log
 		self::log_query( $user_query, $sql, $engine, $formatted['count'], $exec_ms, 'success' );
@@ -354,10 +472,13 @@ class DQA_Chat_Widget {
 			'explanation' => $explanation,
 			'exec_ms'     => $exec_ms,
 			'sql'         => DQA_Settings::get( 'show_sql' ) ? $sql : null,
+			'model'       => $engine->get_model(),
+			'pipeline'    => $pipeline_mode,
 			'tokens'      => [
 				'in'  => $engine->get_in_tokens(),
 				'out' => $engine->get_out_tokens(),
 			],
+			'health'      => $health,
 		];
 
 		// Refresh nonce if needed
@@ -400,6 +521,7 @@ class DQA_Chat_Widget {
 		$user_query     = sanitize_textarea_field( wp_unslash( $_POST['query'] ?? '' ) );
 		$chat_context   = self::sanitize_context( wp_unslash( $_POST['context'] ?? '' ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 		$selected_model = sanitize_text_field( wp_unslash( $_POST['model'] ?? '' ) );
+		$pipeline_mode  = sanitize_text_field( wp_unslash( $_POST['pipeline'] ?? 'agentic' ) );
 		if ( empty( $user_query ) ) {
 			echo 'data: ' . wp_json_encode(
 				[
@@ -426,25 +548,22 @@ class DQA_Chat_Widget {
 				die();
 			}
 
-			// Signal that we're thinking
-			self::sse_push( 'status', __( 'Generating SQL query…', 'data-query-assistant' ) );
-
 			// Schema
 			$schema = DQA_DB_Schema::get_schema_prompt();
 
-			// Buffer for streaming tokens
-			$token_buffer = '';
-
-			// AI → SQL (streaming)
-			$ai_result = self::generate_sql_with_retry(
+			// AI → SQL via agentic pipeline (with streaming + status SSE callbacks)
+			$ai_result = self::run_agentic_pipeline(
 				$engine,
-				self::build_sql_request_prompt( $user_query, $chat_context ),
+				$user_query,
+				$chat_context,
 				$schema,
-				function ( string $token ) use ( &$token_buffer ) {
-					$token_buffer .= $token;
-					// Push each token to client
+				function ( string $token ) {
 					self::sse_push( 'token', $token );
-				}
+				},
+				function ( string $status ) {
+					self::sse_push( 'status', $status );
+				},
+				$pipeline_mode
 			);
 
 			if ( is_wp_error( $ai_result ) ) {
@@ -454,9 +573,6 @@ class DQA_Chat_Widget {
 
 			$sql         = $ai_result['sql'];
 			$explanation = $ai_result['explanation'] ?? '';
-
-			// Signal we're executing SQL
-			self::sse_push( 'status', __( 'Running query…', 'data-query-assistant' ) );
 
 			// Execute
 			$rows = DQA_Query_Executor::execute( $sql );
@@ -476,6 +592,7 @@ class DQA_Chat_Widget {
 			$explanation = self::build_answer_with_data( $engine, $user_query, $sql, $rows, $explanation );
 			$formatted   = DQA_Query_Executor::format_results( $rows, $explanation );
 			$exec_ms     = (int) round( ( microtime( true ) - $start ) * 1000 );
+			$health      = self::build_query_health( $engine, $formatted['count'], $exec_ms );
 
 			// Log
 			self::log_query( $user_query, $sql, $engine, $formatted['count'], $exec_ms, 'success' );
@@ -491,10 +608,13 @@ class DQA_Chat_Widget {
 						'explanation' => $explanation,
 						'exec_ms'     => $exec_ms,
 						'sql'         => DQA_Settings::get( 'show_sql' ) ? $sql : null,
+						'model'       => $engine->get_model(),
+						'pipeline'    => $pipeline_mode,
 						'tokens'      => [
 							'in'  => $engine->get_in_tokens(),
 							'out' => $engine->get_out_tokens(),
 						],
+						'health'      => $health,
 						'new_nonce'   => wp_create_nonce( 'dqa_nonce' ),
 					]
 				)
@@ -547,18 +667,111 @@ class DQA_Chat_Widget {
 		return "Conversation context:\n{$context}\n\nCurrent user question:\n{$query}\n\nUse the context only when it is relevant to the current question.";
 	}
 
-	private static function generate_sql_with_retry(
+	/**
+	 * 2-phase agentic pipeline:
+	 *  Phase 1 — LLM plans: returns "direct" SQL or "discover" intent.
+	 *  Phase 2 — If "discover": run the lightweight discovery query, feed results back to LLM.
+	 *
+	 * @param DQA_Engine_Core  $engine        AI engine instance.
+	 * @param string           $user_question Natural language question.
+	 * @param string           $chat_context  Conversation context.
+	 * @param string           $schema        Full DB schema prompt.
+	 * @param callable|null    $on_chunk      Token streaming callback (Phase 1 only).
+	 * @param callable|null    $on_status     Status message callback: fn(string $message).
+	 * @return array{sql:string,explanation:string}|WP_Error
+	 */
+	private static function run_agentic_pipeline(
 		DQA_Engine_Core $engine,
-		string $user_query,
+		string $user_question,
+		string $chat_context,
 		string $schema,
-		?callable $on_chunk = null
-	) {
-		$ai_result = $engine->generate_sql( $user_query, $schema, $on_chunk );
-		if ( is_wp_error( $ai_result ) && $ai_result->get_error_code() === 'parse_error' ) {
-			DQA_Logger::warn( 'Retrying SQL generation after parse error.' );
-			return $engine->generate_sql( $user_query, $schema, null );
+		?callable $on_chunk,
+		?callable $on_status,
+		string $mode = 'agentic'
+	): array|WP_Error {
+		$emit = function ( string $msg ) use ( $on_status ): void {
+			if ( $on_status ) {
+				( $on_status )( $msg );
+			}
+		};
+
+		$prompt = self::build_sql_request_prompt( $user_question, $chat_context );
+
+		// ── Simple (fast) mode: single LLM call, no discovery ─────
+		if ( 'simple' === $mode ) {
+			$emit( __( 'Generating SQL query…', 'data-query-assistant' ) );
+			$result = $engine->generate_sql( $prompt, $schema, $on_chunk );
+			if ( is_wp_error( $result ) && 'parse_error' === $result->get_error_code() ) {
+				$emit( __( 'Retrying…', 'data-query-assistant' ) );
+				$result = $engine->generate_sql( $prompt, $schema, null );
+			}
+			if ( ! is_wp_error( $result ) ) {
+				$emit( __( 'Running query…', 'data-query-assistant' ) );
+			}
+			return $result;
 		}
-		return $ai_result;
+
+		// ── Deep (agentic) mode: always forced 2-phase pipeline ───
+		// Phase 1: LLM MUST return "discover" with a targeted exploration query.
+		$emit( __( 'Analysing your question…', 'data-query-assistant' ) );
+
+		$force_prompt = $engine->build_forced_discover_prompt( $user_question, $chat_context );
+		$phase1       = $engine->generate_sql( $force_prompt, $schema, $on_chunk );
+
+		// If Phase 1 fails or LLM still went direct despite instruction, fall back to direct.
+		if ( is_wp_error( $phase1 ) || ( $phase1['mode'] ?? '' ) !== 'discover' || empty( $phase1['discovery_sql'] ) ) {
+			DQA_Logger::warn( 'Deep mode Phase 1 did not return discover — falling back to single-call.' );
+			$emit( __( 'Generating SQL query…', 'data-query-assistant' ) );
+			$direct = $engine->generate_sql( $prompt, $schema, null );
+			if ( ! is_wp_error( $direct ) ) {
+				$emit( __( 'Running query…', 'data-query-assistant' ) );
+			}
+			return $direct;
+		}
+
+		$discovery_sql    = (string) $phase1['discovery_sql'];
+		$discovery_reason = (string) ( $phase1['reason'] ?? '' );
+
+		// Phase 2: Run the discovery query against the real DB.
+		$emit( __( 'Exploring your database…', 'data-query-assistant' ) );
+		DQA_Logger::log( 'Deep mode discovery: ' . mb_strimwidth( $discovery_sql, 0, 200 ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Discovery query is a safe SELECT generated by LLM and validated by execute(); not cacheable.
+		$discovery_rows = DQA_Query_Executor::execute( $discovery_sql );
+
+		if ( is_wp_error( $discovery_rows ) ) {
+			DQA_Logger::warn( 'Discovery query failed: ' . $discovery_rows->get_error_message() . '. Falling back to direct.' );
+			$emit( __( 'Generating SQL query…', 'data-query-assistant' ) );
+			$fallback = $engine->generate_sql( $prompt, $schema, null );
+			if ( ! is_wp_error( $fallback ) ) {
+				$emit( __( 'Running query…', 'data-query-assistant' ) );
+			}
+			return $fallback;
+		}
+
+		// Phase 3: Generate the final SQL using the discovery results.
+		$discovery_json = wp_json_encode( array_slice( $discovery_rows, 0, 50 ) );
+		$enriched       = $engine->build_discovery_followup( $user_question, $discovery_reason, (string) $discovery_json );
+
+		$emit( __( 'Generating SQL with discovered data…', 'data-query-assistant' ) );
+
+		$final = $engine->generate_sql( $enriched, $schema, null );
+
+		if ( is_wp_error( $final ) ) {
+			return $final;
+		}
+
+		// Safety: if Phase 3 returned discover again, do one direct retry.
+		if ( 'discover' === ( $final['mode'] ?? '' ) ) {
+			DQA_Logger::warn( 'Phase 3 returned discover mode — falling back to direct retry.' );
+			$final = $engine->generate_sql( $prompt, $schema, null );
+			if ( is_wp_error( $final ) ) {
+				return $final;
+			}
+		}
+
+		$emit( __( 'Running query…', 'data-query-assistant' ) );
+		return $final;
 	}
 
 	private static function build_answer_with_data(
@@ -577,7 +790,7 @@ class DQA_Chat_Widget {
 			return $fallback;
 		}
 
-		$system_prompt = 'You are a WordPress data analyst. Use only the provided query result rows, do not invent facts, and answer in the same language as the user. Keep response concise and useful.';
+		$system_prompt = 'You are a WordPress data analyst. Use only the provided query result rows, do not invent facts. CRITICAL: You MUST reply in the EXACT same language as the user\'s question — detect the language from the question and use it. Keep response concise and useful.';
 		$user_prompt   = "User question:\n{$user_query}\n\nSQL used:\n{$sql}\n\nRows JSON:\n{$rows_json}\n\nWrite a direct answer with key insights.";
 
 		$answer = $engine->complete_text( $system_prompt, $user_prompt );
@@ -644,6 +857,32 @@ class DQA_Chat_Widget {
 		}
 
 		return $trimmed;
+	}
+
+	/**
+	 * Query health diagnostics for UI badges/warnings.
+	 */
+	private static function build_query_health(
+		DQA_Engine_Core $engine,
+		int $row_count,
+		int $exec_ms
+	): array {
+		if ( ! DQA_Feature_Gates::is_enabled( 'query_health' ) ) {
+			return [];
+		}
+
+		$max_rows     = (int) DQA_Settings::get( 'max_rows', 100 );
+		$tokens_total = (int) $engine->get_in_tokens() + (int) $engine->get_out_tokens();
+
+		return [
+			'row_limit'      => $max_rows,
+			'hit_row_limit'  => $row_count >= $max_rows,
+			'slow_query'     => $exec_ms >= 3000,
+			'high_tokens'    => $tokens_total >= 4000,
+			'tokens_total'   => $tokens_total,
+			'rows_returned'  => $row_count,
+			'execution_time' => $exec_ms,
+		];
 	}
 
 	/* ── Query logger ───────────────────────────────────────────── */

@@ -28,7 +28,13 @@ The plugin translates your questions into safe, read-only SQL SELECT queries, ru
 * 🔒 **Read-only by default** — Only SELECT queries are ever executed
 * 📊 **Streaming responses** — Real-time token streaming via Server-Sent Events
 * 💬 **Persistent chat history** — Conversations are saved per-user per-provider
+* 🗂️ **Saved queries & templates** — Save reusable prompts and load them in one click
 * 🔐 **Privacy controls** — Mask sensitive columns (email, phone, passwords) in results and AI context
+* 📥 **CSV exports** — Export query results and query logs as CSV files
+* 🩺 **Query health badges** — Highlights slow queries, row-limit hits, and high token usage
+* 📨 **Pro scheduled reports** — Send recurring SQL reports by email with CSV attachment
+* 🚨 **Pro smart alerts** — Notify when numeric metrics cross your configured thresholds
+* 📌 **Pro saved dashboards** — Pin SQL widgets and view them on a dedicated dashboard page
 * 👥 **Role-based access** — Restrict access to specific WordPress roles
 * ⚡ **Schema caching** — DB schema cached as transients for performance
 * 🛒 **WooCommerce & EDD aware** — Automatic hints for product/order structure

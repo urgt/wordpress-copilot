@@ -32,7 +32,7 @@ class DQA_Query_Executor {
 	public static function validate( string $sql ) {
 		$trimmed = ltrim( $sql );
 
-		if ( ! preg_match( '/^SELECT\s/i', $trimmed ) ) {
+		if ( ! preg_match( '/^(SELECT|WITH)\s/i', $trimmed ) ) {
 			return new WP_Error( 'unsafe_query', __( 'Only SELECT queries are allowed.', 'data-query-assistant' ) );
 		}
 

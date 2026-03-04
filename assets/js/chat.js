@@ -13,6 +13,7 @@
   let currentSSE = null;
   let chats = [];
   let activeChatId = null;
+  let savedQueries = [];
   let currentSlide = 0;
   const TOTAL_SLIDES = 5;
 
@@ -32,8 +33,17 @@
   const $chatList = $('#dqa-chat-list');
   const $newChat = $('#dqa-new-chat');
   const $headerTitle = $('#dqa-header-title');
+  const $savedList = $('#dqa-saved-list');
+  const $paneChats = $('#dqa-pane-chats');
+  const $paneSaved = $('#dqa-pane-saved');
+  const $sidebarTabs = $('.dqa-sidebar-tab');
+  const $pipelineToggle = $('#dqa-pipeline-toggle');
+  // Save modal elements (assigned after DOM ready)
+  let $saveModal, $saveTitle, $saveAsTemplate, $saveModalConfirm;
+  let _saveModalCallback = null;
 
   let currentModel = cfg.model || '';
+  let pipelineMode = 'simple'; // 'agentic' | 'simple'
 
   function init() {
     $('.dqa-sidebar-title').text(cfg.i18n.chats || 'Chats');
@@ -41,8 +51,19 @@
     renderModelOptions();
     updateBadge();
     bindEvents();
+    updatePipelineToggle();
     if (cfg.enableVoice) initVoice();
     initChats();
+    initSavedQueries();
+
+    initSidebarTabs();
+    // Cache modal elements after DOM is ready
+    $saveModal = $('#dqa-save-modal');
+    $saveTitle = $('#dqa-save-title');
+    $saveAsTemplate = $('#dqa-save-as-template');
+    $saveModalConfirm = $('#dqa-save-modal-confirm');
+    bindModalEvents();
+    bindConfirmModal();
   }
 
   function bindEvents() {
@@ -53,6 +74,11 @@
     $send.on('click', submitQuery);
     $voice.on('click', toggleVoice);
     $newChat.on('click', createNewChatAndSelect);
+
+    $pipelineToggle.on('click', function () {
+      pipelineMode = (pipelineMode === 'agentic') ? 'simple' : 'agentic';
+      updatePipelineToggle();
+    });
 
     $modelBtn.on('click', function (e) {
       e.stopPropagation();
@@ -95,8 +121,11 @@
       e.stopPropagation();
       const id = String($(this).closest('.dqa-chat-item').data('id') || '');
       if (!id) return;
-      if (!window.confirm(cfg.i18n.confirmDeleteChat || 'Delete this chat?')) return;
-      deleteChat(id);
+      openConfirmModal(
+        cfg.i18n.deleteChatTitle || 'Delete chat',
+        cfg.i18n.confirmDeleteChat || 'Delete this chat? All messages will be lost.',
+        function () { deleteChat(id); }
+      );
     });
 
     // Onboarding events
@@ -199,6 +228,189 @@
     });
   }
 
+  function initSavedQueries() {
+    if (!(cfg.features || {}).savedQueries) return;
+    dbLoadSavedQueries(function (items) {
+      savedQueries = Array.isArray(items) ? items : [];
+    });
+  }
+
+  function getCurrentQueryForSave() {
+    const inputQuery = String($input.val() || '').trim();
+    if (inputQuery) return inputQuery;
+    const chat = getActiveChat();
+    if (!chat || !Array.isArray(chat.messages)) return '';
+    for (let i = chat.messages.length - 1; i >= 0; i--) {
+      const msg = chat.messages[i];
+      if (msg && msg.role === 'user' && msg.text) {
+        return String(msg.text).trim();
+      }
+    }
+    return '';
+  }
+
+  function saveCurrentQuery() {
+    if (!(cfg.features || {}).savedQueries) {
+      alert(cfg.i18n.featureLocked || 'This feature is available in Pro mode.');
+      return;
+    }
+
+    const query = getCurrentQueryForSave();
+    if (!query) return;
+    saveQueryFromText(query);
+  }
+
+  function saveQueryFromText(queryText) {
+    const query = String(queryText || '').trim();
+    if (!query) return;
+    openSaveModal(query);
+  }
+
+  function openSaveModal(query) {
+    if (!$saveModal || !$saveModal.length) return;
+    $saveTitle.val(makeTitle(query));
+    $saveAsTemplate.prop('checked', false);
+    $saveModal.data('query', query).fadeIn(150);
+    $saveTitle.focus().select();
+    _saveModalCallback = function (title, asTemplate) {
+      const entry = {
+        id: makeId('sq'),
+        title: title,
+        query: query,
+        kind: asTemplate ? 'template' : 'saved'
+      };
+      dbSaveSavedQuery(entry, function (ok, message) {
+        if (!ok) { if (message) alert(message); return; }
+        const idx = savedQueries.findIndex(function (item) { return item.id === entry.id; });
+        if (idx >= 0) savedQueries[idx] = entry; else savedQueries.unshift(entry);
+        renderSavedList();
+      });
+    };
+  }
+
+  function closeSaveModal() {
+    if ($saveModal) $saveModal.fadeOut(120);
+    _saveModalCallback = null;
+  }
+
+  function bindModalEvents() {
+    $('#dqa-save-modal-confirm').on('click', function () {
+      const title = String($saveTitle.val() || '').trim();
+      if (!title) { $saveTitle.focus(); return; }
+      const asTemplate = $saveAsTemplate.is(':checked');
+      const cb = _saveModalCallback;
+      closeSaveModal();
+      if (cb) cb(title, asTemplate);
+    });
+    $('#dqa-save-modal-cancel, #dqa-save-modal-cancel2').on('click', closeSaveModal);
+    $saveTitle.on('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); $('#dqa-save-modal-confirm').trigger('click'); }
+      if (e.key === 'Escape') closeSaveModal();
+    });
+    // Close on backdrop click
+    $('#dqa-save-modal').on('click', function (e) {
+      if ($(e.target).is('#dqa-save-modal')) closeSaveModal();
+    });
+  }
+
+  var _confirmCallback = null;
+
+  function openConfirmModal(title, message, onConfirm) {
+    $('#dqa-confirm-title').text(title);
+    $('#dqa-confirm-msg').text(message);
+    _confirmCallback = onConfirm;
+    $('#dqa-confirm-modal').fadeIn(150);
+  }
+
+  function closeConfirmModal() {
+    $('#dqa-confirm-modal').fadeOut(120);
+    _confirmCallback = null;
+  }
+
+  function bindConfirmModal() {
+    $('#dqa-confirm-ok').on('click', function () {
+      const cb = _confirmCallback;
+      closeConfirmModal();
+      if (cb) cb();
+    });
+    $('#dqa-confirm-cancel').on('click', closeConfirmModal);
+    $('#dqa-confirm-modal').on('click', function (e) {
+      if ($(e.target).is('#dqa-confirm-modal')) closeConfirmModal();
+    });
+    $(document).on('keydown.dqa-confirm', function (e) {
+      if ($('#dqa-confirm-modal').is(':visible') && e.key === 'Escape') closeConfirmModal();
+    });
+  }
+
+  function initSidebarTabs() {
+    $sidebarTabs.on('click', function () {
+      switchSidebarTab($(this).data('sidebar-tab'));
+    });
+  }
+
+  function switchSidebarTab(tab) {
+    $sidebarTabs.removeClass('active').filter('[data-sidebar-tab="' + tab + '"]').addClass('active');
+    if (tab === 'saved') {
+      $paneChats.addClass('dqa-hidden');
+      $paneSaved.removeClass('dqa-hidden');
+      renderSavedList();
+    } else {
+      $paneSaved.addClass('dqa-hidden');
+      $paneChats.removeClass('dqa-hidden');
+    }
+  }
+
+  function renderSavedList() {
+    if (!$savedList.length) return;
+    $savedList.empty();
+    if (!savedQueries.length) {
+      $savedList.append('<p class="dqa-saved-empty">' + (cfg.i18n.noSavedQueries || 'No saved queries yet.') + '</p>');
+      return;
+    }
+    savedQueries.forEach(function (item) {
+      const kindBadge = (item.kind === 'template')
+        ? '<span class="dqa-sq-badge">' + (cfg.i18n.templates || 'Template') + '</span>'
+        : '';
+      const $item = $(
+        '<div class="dqa-sq-item" data-id="' + $('<div>').text(item.id).html() + '">' +
+          '<div class="dqa-sq-title">' + $('<div>').text(item.title || item.query).html() + kindBadge + '</div>' +
+          '<div class="dqa-sq-actions">' +
+            '<button type="button" class="dqa-sq-btn dqa-sq-apply" title="' + (cfg.i18n.applyQuery || 'Apply') + '">' +
+              '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>' +
+            '</button>' +
+            '<button type="button" class="dqa-sq-btn dqa-sq-edit" title="' + (cfg.i18n.editTitle || 'Rename') + '">' +
+              '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+            '</button>' +
+            '<button type="button" class="dqa-sq-btn dqa-sq-delete" title="' + (cfg.i18n.deleteChat || 'Delete') + '">' +
+              '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>' +
+            '</button>' +
+          '</div>' +
+        '</div>'
+      );
+      $item.find('.dqa-sq-apply').on('click', function () {
+        $input.val(String(item.query || '')).focus();
+        switchSidebarTab('chats');
+      });
+      $item.find('.dqa-sq-edit').on('click', function () {
+        const newTitle = String(window.prompt(cfg.i18n.editTitle || 'New title:', item.title) || '').trim();
+        if (!newTitle || newTitle === item.title) return;
+        item.title = newTitle;
+        dbSaveSavedQuery(item, function () { renderSavedList(); });
+      });
+      $item.find('.dqa-sq-delete').on('click', function () {
+        if (!window.confirm(cfg.i18n.confirmDeleteSaved || 'Delete this saved query?')) return;
+        deleteSavedQuery(item.id);
+      });
+      $savedList.append($item);
+    });
+  }
+
+  function deleteSavedQuery(id) {
+    savedQueries = savedQueries.filter(function (item) { return item.id !== id; });
+    renderSavedList();
+    $.post(cfg.ajaxUrl, { action: 'dqa_saved_query_delete', nonce: cfg.nonce, id: id });
+  }
+
   function createEmptyChat() {
     return {
       id: makeId('chat'),
@@ -240,13 +452,19 @@
   function clearCurrentChat() {
     const chat = getActiveChat();
     if (!chat) return;
-    if (isBusy) abortCurrent();
-    chat.messages = [];
-    chat.title = cfg.i18n.newChat || 'New chat';
-    chat.updatedAt = Date.now();
-    persistChats();
-    renderChatList();
-    renderActiveChat();
+    openConfirmModal(
+      cfg.i18n.clearChatTitle || 'Clear chat',
+      cfg.i18n.confirmClearChat || 'Clear all messages in this chat? This cannot be undone.',
+      function () {
+        if (isBusy) abortCurrent();
+        chat.messages = [];
+        chat.title = cfg.i18n.newChat || 'New chat';
+        chat.updatedAt = Date.now();
+        persistChats();
+        renderChatList();
+        renderActiveChat();
+      }
+    );
   }
 
   function getActiveChat() {
@@ -298,17 +516,41 @@
   function renderWelcome() {
     const $welcome = $('<div class="dqa-welcome">');
     $welcome.append($('<p>').text(cfg.i18n.emptyChat || 'Start a new conversation to keep context.'));
-    const $examples = $('<div id="dqa-examples">');
-    (cfg.i18n.examples || []).forEach(function (ex) {
-      const $btn = $('<button class="dqa-chip">').text(ex);
-      $btn.on('click', function () {
-        const clean = ex.replace(/^[\u{1F000}-\u{1FFFF}\s]+/gu, '').trim();
-        $input.val(clean);
-        submitQuery();
+
+    const groups = cfg.i18n.example_groups;
+    if (groups && groups.length) {
+      const $groups = $('<div id="dqa-examples">');
+      groups.forEach(function (g) {
+        const $group = $('<div class="dqa-examples-group">');
+        $group.append($('<span class="dqa-examples-group-label">').text(g.group || ''));
+        const $chips = $('<div class="dqa-examples-chips">');
+        (g.items || []).forEach(function (ex) {
+          const $btn = $('<button class="dqa-chip">').text(ex);
+          $btn.on('click', function () {
+            $input.val(ex);
+            submitQuery();
+          });
+          $chips.append($btn);
+        });
+        $group.append($chips);
+        $groups.append($group);
       });
-      $examples.append($btn);
-    });
-    $welcome.append($examples);
+      $welcome.append($groups);
+    } else {
+      // fallback: flat examples array
+      const $examples = $('<div id="dqa-examples">');
+      (cfg.i18n.examples || []).forEach(function (ex) {
+        const $btn = $('<button class="dqa-chip">').text(ex);
+        $btn.on('click', function () {
+          const clean = ex.replace(/^[\u{1F000}-\u{1FFFF}\s]+/gu, '').trim();
+          $input.val(clean);
+          submitQuery();
+        });
+        $examples.append($btn);
+      });
+      $welcome.append($examples);
+    }
+
     $messages.append($welcome);
   }
 
@@ -341,6 +583,7 @@
     setBusy(true);
     const $bot = appendMsg('bot', '', false, true);
     $bot.data('query', query);
+    $bot.html('<span class="dqa-dots"><span></span><span></span><span></span></span>');
 
     const controller = new AbortController();
     currentSSE = { close: function () { controller.abort(); } };
@@ -350,6 +593,7 @@
       nonce: cfg.nonce,
       query: query,
       model: getSelectedModel(),
+      pipeline: pipelineMode,
       context: context
     });
 
@@ -412,25 +656,48 @@
 
   function handleSSEEvent(event, $bot, query) {
     if (event.type === 'status') {
-      $bot.find('.dqa-status').remove();
-      $bot.append('<div class="dqa-status">' + escHtml(event.data) + '</div>');
+      let $thinking = $bot.find('.dqa-thinking');
+      if (!$thinking.length) {
+        $bot.find('.dqa-dots').remove();
+        $thinking = $(
+          '<details class="dqa-thinking" open>' +
+            '<summary class="dqa-thinking-summary">' +
+              '<span class="dqa-thinking-spinner"></span>' +
+              '<span class="dqa-thinking-label"></span>' +
+              '<span class="dqa-thinking-chevron">▾</span>' +
+            '</summary>' +
+            '<div class="dqa-thinking-body"><pre class="dqa-thinking-pre"></pre></div>' +
+          '</details>'
+        );
+        $bot.append($thinking);
+      }
+      $thinking.find('.dqa-thinking-label').text(String(event.data || ''));
       scrollBottom();
       return;
     }
 
     if (event.type === 'token') {
-      let preview = $bot.find('.dqa-stream-preview');
-      const next = (preview.data('raw') || '') + String(event.data || '');
-      if (!preview.length) {
-        preview = $('<div class="dqa-stream-preview"><span class="dqa-sp-badge">SQL</span><code class="dqa-sp-code"></code></div>');
-        $bot.append(preview);
+      let $thinking = $bot.find('.dqa-thinking');
+      if (!$thinking.length) {
+        $bot.find('.dqa-dots').remove();
+        $thinking = $(
+          '<details class="dqa-thinking" open>' +
+            '<summary class="dqa-thinking-summary">' +
+              '<span class="dqa-thinking-spinner"></span>' +
+              '<span class="dqa-thinking-label">Thinking…</span>' +
+              '<span class="dqa-thinking-chevron">▾</span>' +
+            '</summary>' +
+            '<div class="dqa-thinking-body"><pre class="dqa-thinking-pre"></pre></div>' +
+          '</details>'
+        );
+        $bot.append($thinking);
       }
-      preview.data('raw', next);
-      // Extract just the SQL value from the partial JSON stream
-      const m = next.match(/"sql"\s*:\s*"((?:[^"\\]|\\.)*)/);
-      const sqlText = m ? m[1].replace(/\\n/g, ' ').replace(/\\"/g, '"') : next;
-      const display = sqlText.slice(-160); // show last 160 chars as it grows
-      preview.find('.dqa-sp-code').text(display);
+      const $pre = $thinking.find('.dqa-thinking-pre');
+      const next = ($pre.data('raw') || '') + String(event.data || '');
+      $pre.data('raw', next);
+      $pre.text(next);
+      const body = $thinking.find('.dqa-thinking-body')[0];
+      if (body) body.scrollTop = body.scrollHeight;
       scrollBottom();
       return;
     }
@@ -446,8 +713,18 @@
         return;
       }
 
+      // Collapse and mark thinking block as done, keep it above result
+      const $thinking = $bot.find('.dqa-thinking');
+      if ($thinking.length) {
+        $thinking.addClass('dqa-thinking--done');
+        $thinking.find('.dqa-thinking-label').text(cfg.i18n.done || 'Done');
+        $thinking[0].removeAttribute('open');
+        $thinking.detach();
+      }
+
       if (result.new_nonce) cfg.nonce = result.new_nonce;
       $bot.empty();
+      if ($thinking && $thinking.length) $bot.append($thinking);
       renderResult($bot, result);
       saveBotSuccess(query, result);
       setBusy(false);
@@ -456,7 +733,7 @@
     }
 
     if (event.type === 'error') {
-      $bot.find('.dqa-status, .dqa-stream-preview').remove();
+      $bot.find('.dqa-thinking, .dqa-dots').remove();
       if ('no_api_key' === (event.code || '')) {
         showNoApiKeyNotice($bot, query);
       } else if (event.sql && cfg.showSql) {
@@ -484,6 +761,7 @@
         nonce: cfg.nonce,
         query: query,
         model: getSelectedModel(),
+        pipeline: pipelineMode,
         context: context
       }
     })
@@ -638,9 +916,11 @@
     }
 
     const meta = [];
+    if (data.model) meta.push(data.model);
+    if (data.pipeline) meta.push(data.pipeline === 'agentic' ? (cfg.i18n.pipelineAgentic || 'Deep') : (cfg.i18n.pipelineSimple || 'Fast'));
     if (data.count > 1) meta.push(data.count + ' rows');
     if (data.tokens) meta.push('↑' + (data.tokens.in || 0) + ' ↓' + (data.tokens.out || 0) + ' tok');
-    if (data.exec_ms) meta.push(data.exec_ms + 'ms');
+    if (data.exec_ms) meta.push((data.exec_ms / 1000).toFixed(1) + 's');
     if (meta.length) {
       $bot.append($('<div class="dqa-meta">').text(meta.join(' · ')));
     }
@@ -665,7 +945,20 @@
     $container.find('.dqa-actions').remove();
 
     const $actions = $('<div class="dqa-actions">');
-    const $retry = $('<button type="button" class="dqa-retry-btn">').text(cfg.i18n.retry || 'Try again');
+    if ((cfg.features || {}).savedQueries) {
+      const $save = $('<button type="button" class="dqa-retry-btn">');
+      $save.html('<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:4px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>' + (cfg.i18n.saveQuery || 'Save query'));
+      $save.on('click', function () { saveQueryFromText(query); });
+      $actions.append($save);
+    }
+    if ((cfg.features || {}).csvExport && ($container.find('.dqa-table').length || $container.find('.dqa-scalar').length)) {
+      const $export = $('<button type="button" class="dqa-retry-btn">');
+      $export.html('<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' + (cfg.i18n.exportCsv || 'Export CSV'));
+      $export.on('click', function () { exportResultCsv($container, query); });
+      $actions.append($export);
+    }
+    const $retry = $('<button type="button" class="dqa-retry-btn">');
+    $retry.html('<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;margin-right:4px"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>' + (cfg.i18n.retry || 'Try again'));
     $retry.on('click', function () {
       if (isBusy) return;
       $input.val(query);
@@ -741,7 +1034,8 @@
       sql: String(data.sql || ''),
       count: Number(data.count || 0),
       exec_ms: Number(data.exec_ms || 0),
-      tokens: data.tokens || null
+      tokens: data.tokens || null,
+      health: data.health || null
     };
   }
 
@@ -838,6 +1132,14 @@
     $badge.text(providerLabel);
   }
 
+  function updatePipelineToggle() {
+    const isAgentic = (pipelineMode === 'agentic');
+    $pipelineToggle
+      .toggleClass('is-agentic', isAgentic)
+      .toggleClass('is-simple', !isAgentic)
+      .attr('title', isAgentic ? (cfg.i18n.pipelineAgenticTitle || 'Deep mode') : (cfg.i18n.pipelineSimpleTitle || 'Fast mode'));
+  }
+
   /* ── DB storage ─────────────────────────────────────────── */
 
   function loadChatsFromStorage() {
@@ -903,6 +1205,104 @@
       nonce:   cfg.nonce,
       chat_id: chatId
     });
+  }
+
+  function dbLoadSavedQueries(callback) {
+    $.post(cfg.ajaxUrl, {
+      action:   'dqa_saved_queries_load',
+      nonce:    cfg.nonce,
+      provider: cfg.providerKey || ''
+    }, function (resp) {
+      if (resp && resp.success && Array.isArray(resp.data)) {
+        callback(resp.data);
+        return;
+      }
+      callback([]);
+    }).fail(function () { callback([]); });
+  }
+
+  function dbSaveSavedQuery(entry, callback) {
+    $.post(cfg.ajaxUrl, {
+      action:   'dqa_saved_query_save',
+      nonce:    cfg.nonce,
+      provider: cfg.providerKey || '',
+      entry:    JSON.stringify(entry || {})
+    }, function (resp) {
+      if (resp && resp.success) {
+        callback(true, '');
+        return;
+      }
+      const message = ((resp || {}).data || {}).message || (cfg.i18n.error || 'Something went wrong. Please try again.');
+      callback(false, String(message));
+    }).fail(function () {
+      callback(false, cfg.i18n.error || 'Something went wrong. Please try again.');
+    });
+  }
+
+  function exportResultCsv($container, query) {
+    const rows = [];
+    const $table = $container.find('.dqa-table').first();
+    if ($table.length) {
+      const header = [];
+      $table.find('thead th').each(function () { header.push(normalizeCsvCell($(this).text())); });
+      if (header.length) rows.push(header);
+      $table.find('tbody tr').each(function () {
+        const row = [];
+        $(this).find('td').each(function () {
+          row.push(normalizeCsvCell($(this).text()));
+        });
+        if (row.length) rows.push(row);
+      });
+    } else {
+      const scalarLabel = normalizeCsvCell($container.find('.dqa-scalar-label').first().text());
+      const scalarValue = normalizeCsvCell($container.find('.dqa-scalar-value').first().text());
+      if (scalarLabel || scalarValue) {
+        rows.push(['metric', 'value']);
+        rows.push([scalarLabel || 'value', scalarValue || '']);
+      }
+    }
+
+    if (!rows.length) return;
+    const csvText = rows.map(function (row) {
+      return row.map(csvEscape).join(',');
+    }).join('\r\n');
+
+    const slug = slugifyFilename(query || 'result');
+    downloadBlob(
+      new Blob([csvText], { type: 'text/csv;charset=utf-8;' }),
+      'dqa-result-' + slug + '.csv'
+    );
+  }
+
+  function downloadBlob(blob, filename) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  }
+
+  function slugifyFilename(text) {
+    return String(text || 'query')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48) || 'query';
+  }
+
+  function normalizeCsvCell(text) {
+    return String(text || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function csvEscape(value) {
+    const cell = String(value || '');
+    if (/["\n,]/.test(cell)) {
+      return '"' + cell.replace(/"/g, '""') + '"';
+    }
+    return cell;
   }
 
   function makeId(prefix) {

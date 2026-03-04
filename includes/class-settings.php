@@ -152,6 +152,29 @@ class DQA_Settings {
 		$clean['query_timeout']     = max( 0, min( 120, intval( $input['query_timeout'] ?? 15 ) ) );
 
 		// Advanced
+		$valid_tiers           = [ 'free', 'pro' ];
+		$clean['feature_tier'] = in_array( $input['feature_tier'] ?? 'free', $valid_tiers, true )
+			? $input['feature_tier']
+			: 'free';
+		$valid_pro_freq             = [ 'daily', 'weekly', 'monthly' ];
+		$clean['pro_reports_enabled']   = ! empty( $input['pro_reports_enabled'] );
+		$clean['pro_reports_email']     = sanitize_email( $input['pro_reports_email'] ?? '' );
+		$clean['pro_reports_frequency'] = in_array( $input['pro_reports_frequency'] ?? 'daily', $valid_pro_freq, true )
+			? $input['pro_reports_frequency']
+			: 'daily';
+		$clean['pro_reports_sql']       = sanitize_textarea_field( $input['pro_reports_sql'] ?? '' );
+		$clean['pro_alerts_enabled']    = ! empty( $input['pro_alerts_enabled'] );
+		$clean['pro_alerts_email']      = sanitize_email( $input['pro_alerts_email'] ?? '' );
+		$clean['pro_alerts_frequency']  = in_array( $input['pro_alerts_frequency'] ?? 'daily', $valid_pro_freq, true )
+			? $input['pro_alerts_frequency']
+			: 'daily';
+		$clean['pro_alerts_sql']        = sanitize_textarea_field( $input['pro_alerts_sql'] ?? '' );
+		$valid_alert_ops                = [ 'gt', 'gte', 'lt', 'lte' ];
+		$clean['pro_alerts_operator']   = in_array( $input['pro_alerts_operator'] ?? 'gt', $valid_alert_ops, true )
+			? $input['pro_alerts_operator']
+			: 'gt';
+		$clean['pro_alerts_threshold']  = (float) ( $input['pro_alerts_threshold'] ?? 0 );
+		$clean['pro_dashboard_queries'] = sanitize_textarea_field( $input['pro_dashboard_queries'] ?? '' );
 		$clean['streaming']    = ! empty( $input['streaming'] );
 		$clean['enable_voice'] = ! empty( $input['enable_voice'] );
 		$clean['show_sql']     = ! empty( $input['show_sql'] );
@@ -642,6 +665,20 @@ class DQA_Settings {
 			<div class="dqa-tab-panel" data-panel="advanced">
 
 				<div class="dqa-card">
+					<h3><?php esc_html_e( 'Feature Tier Mode', 'data-query-assistant' ); ?></h3>
+					<div class="dqa-field">
+						<label><?php esc_html_e( 'Active mode', 'data-query-assistant' ); ?></label>
+						<div>
+							<select name="<?php echo esc_attr( self::OPTION_KEY ); ?>[feature_tier]">
+								<option value="free" <?php selected( ( $opts['feature_tier'] ?? 'free' ), 'free' ); ?>><?php esc_html_e( 'Free', 'data-query-assistant' ); ?></option>
+								<option value="pro" <?php selected( ( $opts['feature_tier'] ?? 'free' ), 'pro' ); ?>><?php esc_html_e( 'Pro', 'data-query-assistant' ); ?></option>
+							</select>
+							<p class="dqa-desc"><?php esc_html_e( 'Controls feature gates for Free/Pro surfaces. Licensing is not enforced in this version.', 'data-query-assistant' ); ?></p>
+						</div>
+					</div>
+				</div>
+
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Response', 'data-query-assistant' ); ?></h3>
 					<div class="dqa-toggle-row">
 						<input type="checkbox" id="opt_streaming" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[streaming]" value="1"
@@ -691,6 +728,11 @@ class DQA_Settings {
 							<p class="dqa-desc"><?php esc_html_e( 'Verbose logging to PHP error log. Disable in production.', 'data-query-assistant' ); ?></p>
 						</div>
 					</div>
+				</div>
+
+				<div class="dqa-card">
+					<h3><?php esc_html_e( 'Pro Features', 'data-query-assistant' ); ?></h3>
+					<p class="dqa-desc"><?php echo wp_kses( sprintf( __( 'Configure Scheduled Reports, Smart Alerts, and Dashboard Widgets on the <a href="%s">DQA Dashboards</a> page.', 'data-query-assistant' ), esc_url( admin_url( 'admin.php?page=dqa-dashboards' ) ) ), [ 'a' => [ 'href' => [] ] ] ); ?></p>
 				</div>
 
 				<?php submit_button( __( 'Save Settings', 'data-query-assistant' ) ); ?>
