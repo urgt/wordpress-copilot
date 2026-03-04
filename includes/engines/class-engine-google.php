@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
  *
  * Response format differs from OpenAI/Anthropic — handled in parse_stream_chunk().
  */
-class WPC_Engine_Google extends WPC_Engine_Core {
+class DQA_Engine_Google extends DQA_Engine_Core {
 
 	const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
@@ -61,7 +61,7 @@ class WPC_Engine_Google extends WPC_Engine_Core {
 			),
 		];
 
-		WPC_Logger::log( "Google request: model={$this->model}, streaming=" . ( $is_streaming ? 'yes' : 'no' ) );
+		DQA_Logger::log( "Google request: model={$this->model}, streaming=" . ( $is_streaming ? 'yes' : 'no' ) );
 
 		$result = $this->post( $url, $headers, $body, $on_chunk );
 
@@ -177,7 +177,7 @@ class WPC_Engine_Google extends WPC_Engine_Core {
 
 		$options = [
 			'method'    => 'POST',
-			'timeout'   => WPC_TIMEOUT,
+			'timeout'   => DQA_TIMEOUT,
 			'sslverify' => true,
 			'headers'   => $headers,
 			'body'      => $encoded_body,

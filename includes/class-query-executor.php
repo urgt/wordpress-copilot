@@ -1,7 +1,7 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
-class WPC_Query_Executor {
+class DQA_Query_Executor {
 
 	/** Blocked SQL keywords — defence-in-depth after AI-level restriction */
 	const BLOCKED_KEYWORDS = [
@@ -60,7 +60,7 @@ class WPC_Query_Executor {
 		global $wpdb;
 
 		// Optional query timeout for large databases
-		$timeout = (int) WPC_Settings::get( 'query_timeout', 15 );
+		$timeout = (int) DQA_Settings::get( 'query_timeout', 15 );
 		if ( $timeout > 0 ) {
 			self::set_session_timeout( $timeout );
 		}
@@ -79,7 +79,7 @@ class WPC_Query_Executor {
 		$rows = self::format_row_values( $rows );
 
 		// Apply data anonymizer
-		if ( ! empty( $rows ) && WPC_Settings::get( 'anonymize_enabled' ) ) {
+		if ( ! empty( $rows ) && DQA_Settings::get( 'anonymize_enabled' ) ) {
 			$rows = self::anonymize_rows( $rows );
 		}
 
@@ -100,7 +100,7 @@ class WPC_Query_Executor {
 		$mysql_error = $wpdb->last_error;
 		$wpdb->query( $wpdb->prepare( 'SET SESSION max_statement_time=%f', (float) $timeout ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		if ( '' !== $wpdb->last_error ) {
-			WPC_Logger::warn(
+			DQA_Logger::warn(
 				sprintf(
 					'Unable to apply query timeout (MAX_EXECUTION_TIME: %1$s | max_statement_time: %2$s)',
 					$mysql_error,
@@ -154,7 +154,7 @@ class WPC_Query_Executor {
 	/** Render a table cell value as safe HTML */
 	private static function render_cell( $cell ): string {
 		if ( null === $cell || '' === $cell ) {
-			return '<span class="wpc-cell-null">' . esc_html( __( '—', 'data-query-assistant' ) ) . '</span>';
+			return '<span class="dqa-cell-null">' . esc_html( __( '—', 'data-query-assistant' ) ) . '</span>';
 		}
 
 		$val = (string) $cell;
@@ -169,12 +169,12 @@ class WPC_Query_Executor {
 					? $count . ' items'
 					: implode( ', ', array_slice( array_keys( $decoded ), 0, 3 ) ) . ( $count > 3 ? '…' : '' );
 				$pretty  = wp_json_encode( $decoded, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
-				return '<details class="wpc-cell-details"><summary class="wpc-cell-json-summary">{'
+				return '<details class="dqa-cell-details"><summary class="dqa-cell-json-summary">{'
 					. esc_html( $summary ) . '}</summary>'
-					. '<pre class="wpc-cell-json-pre">' . esc_html( $pretty ) . '</pre></details>';
+					. '<pre class="dqa-cell-json-pre">' . esc_html( $pretty ) . '</pre></details>';
 			}
 			// Fallback: show truncated
-			return '<span class="wpc-cell-long" title="' . esc_attr( mb_strimwidth( $val, 0, 500 ) ) . '">'
+			return '<span class="dqa-cell-long" title="' . esc_attr( mb_strimwidth( $val, 0, 500 ) ) . '">'
 				. esc_html( mb_strimwidth( $val, 0, 80, '…' ) ) . '</span>';
 		}
 
@@ -188,7 +188,7 @@ class WPC_Query_Executor {
 				'',
 				array_map(
 					fn( $item ) =>
-						'<span class="wpc-cell-tag">' . esc_html( $item ) . '</span>',
+						'<span class="dqa-cell-tag">' . esc_html( $item ) . '</span>',
 					$visible
 				)
 			);
@@ -197,24 +197,24 @@ class WPC_Query_Executor {
 					'',
 					array_map(
 						fn( $item ) =>
-							'<span class="wpc-cell-tag wpc-cell-tag-hidden">' . esc_html( $item ) . '</span>',
+							'<span class="dqa-cell-tag dqa-cell-tag-hidden">' . esc_html( $item ) . '</span>',
 						$hidden
 					)
 				);
-				$tags .= '<span class="wpc-cell-tag wpc-cell-tag-more" data-count="' . count( $hidden ) . '">+' . count( $hidden ) . ' more</span>';
-				$tags .= '<span class="wpc-cell-tag-extra" style="display:none">' . $more . '</span>';
+				$tags .= '<span class="dqa-cell-tag dqa-cell-tag-more" data-count="' . count( $hidden ) . '">+' . count( $hidden ) . ' more</span>';
+				$tags .= '<span class="dqa-cell-tag-extra" style="display:none">' . $more . '</span>';
 			}
-			return '<div class="wpc-cell-tags">' . $tags . '</div>';
+			return '<div class="dqa-cell-tags">' . $tags . '</div>';
 		}
 
 		// Numeric
 		if ( is_numeric( $val ) ) {
-			return '<span class="wpc-cell-num">' . esc_html( number_format_i18n( (float) $val, str_contains( $val, '.' ) ? 2 : 0 ) ) . '</span>';
+			return '<span class="dqa-cell-num">' . esc_html( number_format_i18n( (float) $val, str_contains( $val, '.' ) ? 2 : 0 ) ) . '</span>';
 		}
 
 		// Long plain text → truncate with tooltip
 		if ( mb_strlen( $val ) > 120 ) {
-			return '<span class="wpc-cell-long" title="' . esc_attr( $val ) . '">' . esc_html( mb_strimwidth( $val, 0, 120, '…' ) ) . '</span>';
+			return '<span class="dqa-cell-long" title="' . esc_attr( $val ) . '">' . esc_html( mb_strimwidth( $val, 0, 120, '…' ) ) . '</span>';
 		}
 
 		return esc_html( $val );
@@ -236,7 +236,7 @@ class WPC_Query_Executor {
 	 * Replace sensitive column values with [REDACTED].
 	 */
 	public static function anonymize_rows( array $rows ): array {
-		$patterns_raw = WPC_Settings::get( 'anonymize_columns', WPC_Settings::default_anon_columns() );
+		$patterns_raw = DQA_Settings::get( 'anonymize_columns', DQA_Settings::default_anon_columns() );
 		$patterns     = array_filter( array_map( 'strtolower', array_map( 'trim', explode( "\n", $patterns_raw ) ) ) );
 		if ( empty( $patterns ) ) {
 			return $rows;
@@ -262,7 +262,7 @@ class WPC_Query_Executor {
 
 		if ( 0 === $count ) {
 			return [
-				'html'    => '<p class="wpc-no-results">' . esc_html( __( 'No results found.', 'data-query-assistant' ) ) . '</p>',
+				'html'    => '<p class="dqa-no-results">' . esc_html( __( 'No results found.', 'data-query-assistant' ) ) . '</p>',
 				'summary' => $explanation . ' — ' . __( 'No results found.', 'data-query-assistant' ),
 				'count'   => 0,
 			];
@@ -277,8 +277,8 @@ class WPC_Query_Executor {
 				: self::render_cell( $value );
 			return [
 				'html'    => sprintf(
-					'<div class="wpc-scalar"><span class="wpc-scalar-label">%s</span>'
-					. '<span class="wpc-scalar-value">%s</span></div>',
+					'<div class="dqa-scalar"><span class="dqa-scalar-label">%s</span>'
+					. '<span class="dqa-scalar-value">%s</span></div>',
 					esc_html( $label ),
 					$display   // already safe (render_cell escapes, number_format is numeric-only)
 				),
@@ -289,7 +289,7 @@ class WPC_Query_Executor {
 
 		// Table
 		$headers = array_keys( $rows[0] );
-		$html    = '<div class="wpc-table-wrap"><table class="wpc-table"><thead><tr>';
+		$html    = '<div class="dqa-table-wrap"><table class="dqa-table"><thead><tr>';
 		foreach ( $headers as $h ) {
 			$html .= '<th>' . esc_html( $h ) . '</th>';
 		}
@@ -304,9 +304,9 @@ class WPC_Query_Executor {
 		}
 		$html .= '</tbody></table></div>';
 
-		$max_rows = (int) WPC_Settings::get( 'max_rows', 100 );
+		$max_rows = (int) DQA_Settings::get( 'max_rows', 100 );
 		$limited  = $count >= $max_rows
-			? ' <span class="wpc-limit-note">' . sprintf(
+			? ' <span class="dqa-limit-note">' . sprintf(
 				/* translators: %d: maximum number of rows */
 				__( '(limited to %d rows)', 'data-query-assistant' ),
 				$max_rows

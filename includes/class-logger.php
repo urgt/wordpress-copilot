@@ -1,10 +1,10 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
-class WPC_Logger {
+class DQA_Logger {
 
 	public static function log( string $msg ): void {
-		if ( WPC_Settings::get( 'debug_mode' ) ) {
+		if ( DQA_Settings::get( 'debug_mode' ) ) {
 			error_log( '[Data Query Assistant] ' . $msg ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		}
 	}

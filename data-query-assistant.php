@@ -16,35 +16,35 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'WPC_VERSION', '1.0.0' );
-define( 'WPC_PATH', plugin_dir_path( __FILE__ ) );
-define( 'WPC_URL', plugin_dir_url( __FILE__ ) );
-define( 'WPC_TIMEOUT', 90 );
+define( 'DQA_VERSION', '1.0.0' );
+define( 'DQA_PATH', plugin_dir_path( __FILE__ ) );
+define( 'DQA_URL', plugin_dir_url( __FILE__ ) );
+define( 'DQA_TIMEOUT', 90 );
 
 /* ── Autoload ────────────────────────────────────────────────────── */
-require_once WPC_PATH . 'includes/class-logger.php';
-require_once WPC_PATH . 'includes/class-settings.php';
-require_once WPC_PATH . 'includes/class-db-schema.php';
-require_once WPC_PATH . 'includes/class-query-executor.php';
-require_once WPC_PATH . 'includes/engines/class-engine-core.php';
-require_once WPC_PATH . 'includes/engines/class-engine-anthropic.php';
-require_once WPC_PATH . 'includes/engines/class-engine-openai.php';
-require_once WPC_PATH . 'includes/engines/class-engine-google.php';
-require_once WPC_PATH . 'includes/engines/class-engine-factory.php';
-require_once WPC_PATH . 'includes/class-chat-storage.php';
-require_once WPC_PATH . 'includes/class-chat-widget.php';
+require_once DQA_PATH . 'includes/class-logger.php';
+require_once DQA_PATH . 'includes/class-settings.php';
+require_once DQA_PATH . 'includes/class-db-schema.php';
+require_once DQA_PATH . 'includes/class-query-executor.php';
+require_once DQA_PATH . 'includes/engines/class-engine-core.php';
+require_once DQA_PATH . 'includes/engines/class-engine-anthropic.php';
+require_once DQA_PATH . 'includes/engines/class-engine-openai.php';
+require_once DQA_PATH . 'includes/engines/class-engine-google.php';
+require_once DQA_PATH . 'includes/engines/class-engine-factory.php';
+require_once DQA_PATH . 'includes/class-chat-storage.php';
+require_once DQA_PATH . 'includes/class-chat-widget.php';
 
 /* ── Bootstrap ───────────────────────────────────────────────────── */
 add_action(
 	'plugins_loaded',
 	function () {
-		WPC_Settings::init();
-		WPC_Chat_Storage::register_ajax();
-		WPC_Chat_Widget::init();
+		DQA_Settings::init();
+		DQA_Chat_Storage::register_ajax();
+		DQA_Chat_Widget::init();
 
 		// Suppress WP DB error output for AJAX requests — nonce is verified in each handler.
     // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		if ( wp_doing_ajax() && in_array( $_POST['action'] ?? '', [ 'wpc_query', 'wpc_stream' ], true ) ) {
+		if ( wp_doing_ajax() && in_array( $_POST['action'] ?? '', [ 'dqa_query', 'dqa_stream' ], true ) ) {
 			ob_start();
 			add_action(
 				'shutdown',
@@ -69,7 +69,7 @@ register_activation_hook(
 		$charset = $wpdb->get_charset_collate();
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-		$table = $wpdb->prefix . 'copilot_logs';
+		$table = $wpdb->prefix . 'dqa_logs';
 		dbDelta(
 			"CREATE TABLE IF NOT EXISTS {$table} (
         id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -91,14 +91,14 @@ register_activation_hook(
     ) {$charset};"
 		);
 
-		WPC_Chat_Storage::create_table();
-		WPC_DB_Schema::flush_cache();
+		DQA_Chat_Storage::create_table();
+		DQA_DB_Schema::flush_cache();
 	}
 );
 
 register_deactivation_hook(
 	__FILE__,
 	function () {
-		WPC_DB_Schema::flush_cache();
+		DQA_DB_Schema::flush_cache();
 	}
 );

@@ -2,7 +2,7 @@
 (function ($) {
   'use strict';
 
-  const cfg = window.wpCopilot || {};
+  const cfg = window.dqaAssistant || {};
   const CHAT_LIMIT = 20;
   const MSG_LIMIT = 80;
 
@@ -16,27 +16,27 @@
   let currentSlide = 0;
   const TOTAL_SLIDES = 5;
 
-  const $trigger = $('#wpc-trigger');
-  const $panel = $('#wpc-panel');
-  const $messages = $('#wpc-messages');
-  const $input = $('#wpc-input');
-  const $send = $('#wpc-send');
-  const $voice = $('#wpc-voice');
-  const $close      = $('#wpc-close');
-  const $clear      = $('#wpc-clear');
-  const $fullscreen = $('#wpc-fullscreen');
-  const $badge = $('#wpc-provider-badge');
-  const $modelBtn = $('#wpc-model-btn');
-  const $modelLabel = $('#wpc-model-label');
-  const $modelDropdown = $('#wpc-model-dropdown');
-  const $chatList = $('#wpc-chat-list');
-  const $newChat = $('#wpc-new-chat');
-  const $headerTitle = $('#wpc-header-title');
+  const $trigger = $('#dqa-trigger');
+  const $panel = $('#dqa-panel');
+  const $messages = $('#dqa-messages');
+  const $input = $('#dqa-input');
+  const $send = $('#dqa-send');
+  const $voice = $('#dqa-voice');
+  const $close      = $('#dqa-close');
+  const $clear      = $('#dqa-clear');
+  const $fullscreen = $('#dqa-fullscreen');
+  const $badge = $('#dqa-provider-badge');
+  const $modelBtn = $('#dqa-model-btn');
+  const $modelLabel = $('#dqa-model-label');
+  const $modelDropdown = $('#dqa-model-dropdown');
+  const $chatList = $('#dqa-chat-list');
+  const $newChat = $('#dqa-new-chat');
+  const $headerTitle = $('#dqa-header-title');
 
   let currentModel = cfg.model || '';
 
   function init() {
-    $('.wpc-sidebar-title').text(cfg.i18n.chats || 'Chats');
+    $('.dqa-sidebar-title').text(cfg.i18n.chats || 'Chats');
     $newChat.text('+ ' + (cfg.i18n.newChat || 'New chat'));
     renderModelOptions();
     updateBadge();
@@ -76,13 +76,13 @@
     });
 
     // +N more tags toggle (delegated)
-    $messages.on('click', '.wpc-cell-tag-more', function () {
-      const $extra = $(this).next('.wpc-cell-tag-extra');
+    $messages.on('click', '.dqa-cell-tag-more', function () {
+      const $extra = $(this).next('.dqa-cell-tag-extra');
       $extra.toggle();
       $(this).toggle();
     });
 
-    $chatList.on('click', '.wpc-chat-item', function () {
+    $chatList.on('click', '.dqa-chat-item', function () {
       const id = String($(this).data('id') || '');
       if (!id || id === activeChatId) return;
       activeChatId = id;
@@ -91,24 +91,24 @@
       renderActiveChat();
     });
 
-    $chatList.on('click', '.wpc-chat-delete', function (e) {
+    $chatList.on('click', '.dqa-chat-delete', function (e) {
       e.stopPropagation();
-      const id = String($(this).closest('.wpc-chat-item').data('id') || '');
+      const id = String($(this).closest('.dqa-chat-item').data('id') || '');
       if (!id) return;
       if (!window.confirm(cfg.i18n.confirmDeleteChat || 'Delete this chat?')) return;
       deleteChat(id);
     });
 
     // Onboarding events
-    $('#wpc-ob-next').on('click', function () {
+    $('#dqa-ob-next').on('click', function () {
       if (currentSlide < TOTAL_SLIDES - 1) { currentSlide++; renderOnboarding(); }
     });
-    $('#wpc-ob-prev').on('click', function () {
+    $('#dqa-ob-prev').on('click', function () {
       if (currentSlide > 0) { currentSlide--; renderOnboarding(); }
     });
-    $('#wpc-ob-skip').on('click', finishOnboarding);
-    $('#wpc-ob-finish').on('click', finishOnboarding);
-    $(document).on('click', '.wpc-ob-example', function () {
+    $('#dqa-ob-skip').on('click', finishOnboarding);
+    $('#dqa-ob-finish').on('click', finishOnboarding);
+    $(document).on('click', '.dqa-ob-example', function () {
       var query = String($(this).data('query') || '');
       finishOnboarding();
       if (query) { $input.val(query).focus(); }
@@ -123,40 +123,40 @@
     maybeShowOnboarding();
   }
   function closePanel() {
-    if ($panel.hasClass('wpc-is-fullscreen')) toggleFullscreen();
+    if ($panel.hasClass('dqa-is-fullscreen')) toggleFullscreen();
     $panel.removeClass('is-open');
     $trigger.removeClass('active').attr('aria-expanded', 'false');
   }
   function toggleFullscreen() {
-    const on = $panel.toggleClass('wpc-is-fullscreen').hasClass('wpc-is-fullscreen');
-    $fullscreen.find('.wpc-fs-expand').toggle(!on);
-    $fullscreen.find('.wpc-fs-collapse').toggle(on);
+    const on = $panel.toggleClass('dqa-is-fullscreen').hasClass('dqa-is-fullscreen');
+    $fullscreen.find('.dqa-fs-expand').toggle(!on);
+    $fullscreen.find('.dqa-fs-collapse').toggle(on);
     $fullscreen.attr('title', on ? 'Exit fullscreen' : 'Fullscreen');
-    $('html, body').toggleClass('wpc-no-scroll', on);
+    $('html, body').toggleClass('dqa-no-scroll', on);
     scrollBottom();
   }
 
   /* ── Onboarding ─────────────────────────────────────────────── */
   function maybeShowOnboarding() {
-    if (localStorage.getItem('wpc_onboarded_v2')) return;
-    $('#wpc-onboarding').css('display', 'flex').hide().fadeIn(200);
+    if (localStorage.getItem('dqa_onboarded_v2')) return;
+    $('#dqa-onboarding').css('display', 'flex').hide().fadeIn(200);
     currentSlide = 0;
     renderOnboarding();
   }
 
   function renderOnboarding() {
-    $('.wpc-ob-slide').removeClass('active');
-    $('.wpc-ob-slide[data-slide="' + currentSlide + '"]').addClass('active');
-    $('.wpc-ob-dot').removeClass('active');
-    $('.wpc-ob-dot[data-slide="' + currentSlide + '"]').addClass('active');
-    $('#wpc-ob-prev').toggle(currentSlide > 0);
-    $('#wpc-ob-next').toggle(currentSlide < TOTAL_SLIDES - 1);
-    $('#wpc-ob-finish').toggle(currentSlide === TOTAL_SLIDES - 1);
+    $('.dqa-ob-slide').removeClass('active');
+    $('.dqa-ob-slide[data-slide="' + currentSlide + '"]').addClass('active');
+    $('.dqa-ob-dot').removeClass('active');
+    $('.dqa-ob-dot[data-slide="' + currentSlide + '"]').addClass('active');
+    $('#dqa-ob-prev').toggle(currentSlide > 0);
+    $('#dqa-ob-next').toggle(currentSlide < TOTAL_SLIDES - 1);
+    $('#dqa-ob-finish').toggle(currentSlide === TOTAL_SLIDES - 1);
   }
 
   function finishOnboarding() {
-    localStorage.setItem('wpc_onboarded_v2', '1');
-    $('#wpc-onboarding').fadeOut(200);
+    localStorage.setItem('dqa_onboarded_v2', '1');
+    $('#dqa-onboarding').fadeOut(200);
   }
 
   function initChats() {
@@ -176,7 +176,7 @@
         // DB is empty: persist local chats to DB
         chats.forEach(function (chat) {
           $.post(cfg.ajaxUrl, {
-            action:   'wpc_chat_save',
+            action:   'dqa_chat_save',
             nonce:    cfg.nonce,
             provider: cfg.providerKey || '',
             chat:     JSON.stringify(chat)
@@ -256,11 +256,11 @@
   function renderChatList() {
     $chatList.empty();
     chats.forEach(function (chat) {
-      const $item = $('<button type="button" class="wpc-chat-item">')
+      const $item = $('<button type="button" class="dqa-chat-item">')
         .attr('data-id', chat.id)
         .toggleClass('is-active', chat.id === activeChatId);
-      $item.append($('<span class="wpc-chat-item-title">').text(chat.title || (cfg.i18n.newChat || 'New chat')));
-      $item.append($('<span class="wpc-chat-delete" title="' + escHtml(cfg.i18n.deleteChat || 'Delete chat') + '">').html('&times;'));
+      $item.append($('<span class="dqa-chat-item-title">').text(chat.title || (cfg.i18n.newChat || 'New chat')));
+      $item.append($('<span class="dqa-chat-delete" title="' + escHtml(cfg.i18n.deleteChat || 'Delete chat') + '">').html('&times;'));
       $chatList.append($item);
     });
   }
@@ -284,7 +284,7 @@
       const $bot = appendMsg('bot', '', false, true);
       $bot.data('query', msg.query || '');
       if (msg.error) {
-        $bot.html('<span class="wpc-error">⚠ ' + escHtml(msg.error) + '</span>');
+        $bot.html('<span class="dqa-error">⚠ ' + escHtml(msg.error) + '</span>');
         if (msg.sql && cfg.showSql) appendSqlBlock($bot, msg.sql);
         appendActions($bot);
       } else if (msg.data) {
@@ -296,11 +296,11 @@
   }
 
   function renderWelcome() {
-    const $welcome = $('<div class="wpc-welcome">');
+    const $welcome = $('<div class="dqa-welcome">');
     $welcome.append($('<p>').text(cfg.i18n.emptyChat || 'Start a new conversation to keep context.'));
-    const $examples = $('<div id="wpc-examples">');
+    const $examples = $('<div id="dqa-examples">');
     (cfg.i18n.examples || []).forEach(function (ex) {
-      const $btn = $('<button class="wpc-chip">').text(ex);
+      const $btn = $('<button class="dqa-chip">').text(ex);
       $btn.on('click', function () {
         const clean = ex.replace(/^[\u{1F000}-\u{1FFFF}\s]+/gu, '').trim();
         $input.val(clean);
@@ -330,7 +330,7 @@
     renderChatList();
     $headerTitle.text(chat.title || (cfg.i18n.newChat || 'New chat'));
 
-    $messages.find('.wpc-welcome').remove();
+    $messages.find('.dqa-welcome').remove();
     appendMsg('user', escHtml(query));
     $input.val('');
 
@@ -346,7 +346,7 @@
     currentSSE = { close: function () { controller.abort(); } };
 
     const body = new URLSearchParams({
-      action: 'wpc_stream',
+      action: 'dqa_stream',
       nonce: cfg.nonce,
       query: query,
       model: getSelectedModel(),
@@ -412,17 +412,17 @@
 
   function handleSSEEvent(event, $bot, query) {
     if (event.type === 'status') {
-      $bot.find('.wpc-status').remove();
-      $bot.append('<div class="wpc-status">' + escHtml(event.data) + '</div>');
+      $bot.find('.dqa-status').remove();
+      $bot.append('<div class="dqa-status">' + escHtml(event.data) + '</div>');
       scrollBottom();
       return;
     }
 
     if (event.type === 'token') {
-      let preview = $bot.find('.wpc-stream-preview');
+      let preview = $bot.find('.dqa-stream-preview');
       const next = (preview.data('raw') || '') + String(event.data || '');
       if (!preview.length) {
-        preview = $('<div class="wpc-stream-preview"><span class="wpc-sp-badge">SQL</span><code class="wpc-sp-code"></code></div>');
+        preview = $('<div class="dqa-stream-preview"><span class="dqa-sp-badge">SQL</span><code class="dqa-sp-code"></code></div>');
         $bot.append(preview);
       }
       preview.data('raw', next);
@@ -430,7 +430,7 @@
       const m = next.match(/"sql"\s*:\s*"((?:[^"\\]|\\.)*)/);
       const sqlText = m ? m[1].replace(/\\n/g, ' ').replace(/\\"/g, '"') : next;
       const display = sqlText.slice(-160); // show last 160 chars as it grows
-      preview.find('.wpc-sp-code').text(display);
+      preview.find('.dqa-sp-code').text(display);
       scrollBottom();
       return;
     }
@@ -456,7 +456,7 @@
     }
 
     if (event.type === 'error') {
-      $bot.find('.wpc-status, .wpc-stream-preview').remove();
+      $bot.find('.dqa-status, .dqa-stream-preview').remove();
       if ('no_api_key' === (event.code || '')) {
         showNoApiKeyNotice($bot, query);
       } else if (event.sql && cfg.showSql) {
@@ -473,14 +473,14 @@
     setBusy(true);
     const $bot = appendMsg('bot', '', false, true);
     $bot.data('query', query);
-    $bot.html('<span class="wpc-dots"><span></span><span></span><span></span></span>');
+    $bot.html('<span class="dqa-dots"><span></span><span></span><span></span></span>');
 
     currentXhr = $.ajax({
       url: cfg.ajaxUrl,
       method: 'POST',
       timeout: 90000,
       data: {
-        action: 'wpc_query',
+        action: 'dqa_query',
         nonce: cfg.nonce,
         query: query,
         model: getSelectedModel(),
@@ -531,7 +531,7 @@
   }
 
   function handleBotError($bot, message, query, sql) {
-    $bot.html('<span class="wpc-error">⚠ ' + escHtml(message) + '</span>');
+    $bot.html('<span class="dqa-error">⚠ ' + escHtml(message) + '</span>');
     if (sql && cfg.showSql) appendSqlBlock($bot, sql);
     appendActions($bot);
     saveBotError(query, message, sql || '');
@@ -543,11 +543,11 @@
     const msg     = cfg.i18n.noApiKeyMsg || 'Add your AI provider API key in plugin settings to start using WordPress Copilot.';
     const btnText = cfg.i18n.goToSettings || 'Open Settings';
     $bot.html(
-      '<div class="wpc-no-api-key">' +
-        '<div class="wpc-no-api-key__icon">🔑</div>' +
-        '<h3 class="wpc-no-api-key__title">' + escHtml(title) + '</h3>' +
-        '<p class="wpc-no-api-key__msg">' + escHtml(msg) + '</p>' +
-        '<a href="' + escHtml(settingsUrl) + '" class="wpc-no-api-key__btn">' + escHtml(btnText) + ' →</a>' +
+      '<div class="dqa-no-api-key">' +
+        '<div class="dqa-no-api-key__icon">🔑</div>' +
+        '<h3 class="dqa-no-api-key__title">' + escHtml(title) + '</h3>' +
+        '<p class="dqa-no-api-key__msg">' + escHtml(msg) + '</p>' +
+        '<a href="' + escHtml(settingsUrl) + '" class="dqa-no-api-key__btn">' + escHtml(btnText) + ' →</a>' +
       '</div>'
     );
     saveBotError(query, title, '');
@@ -577,13 +577,13 @@
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     // Fenced code blocks
-    s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, '<pre class="wpc-md-pre"><code>$1</code></pre>');
+    s = s.replace(/```[\w]*\n?([\s\S]*?)```/g, '<pre class="dqa-md-pre"><code>$1</code></pre>');
 
     // Markdown table: lines with | col | col |
     s = s.replace(/((?:\|[^\n]+\|\n?)+)/g, function(block) {
       const rows = block.trim().split('\n').filter(r => r.trim());
       if (rows.length < 2) return block;
-      let html = '<div class="wpc-table-wrap"><table class="wpc-table wpc-md-table">';
+      let html = '<div class="dqa-table-wrap"><table class="dqa-table dqa-md-table">';
       rows.forEach(function(row, i) {
         if (/^\|[-| :]+\|$/.test(row.trim())) return; // separator row
         const cells = row.split('|').filter((_, ci) => ci > 0 && ci < row.split('|').length - 1);
@@ -595,32 +595,32 @@
     });
 
     // Headers
-    s = s.replace(/^### (.+)$/gm, '<h4 class="wpc-md-h">$1</h4>');
-    s = s.replace(/^## (.+)$/gm,  '<h3 class="wpc-md-h">$1</h3>');
-    s = s.replace(/^# (.+)$/gm,   '<h2 class="wpc-md-h">$1</h2>');
+    s = s.replace(/^### (.+)$/gm, '<h4 class="dqa-md-h">$1</h4>');
+    s = s.replace(/^## (.+)$/gm,  '<h3 class="dqa-md-h">$1</h3>');
+    s = s.replace(/^# (.+)$/gm,   '<h2 class="dqa-md-h">$1</h2>');
 
     // Unordered lists
     s = s.replace(/((?:^[*\-] .+\n?)+)/gm, function(block) {
       const items = block.trim().split('\n').map(l => '<li>' + l.replace(/^[*\-] /, '') + '</li>');
-      return '<ul class="wpc-md-ul">' + items.join('') + '</ul>';
+      return '<ul class="dqa-md-ul">' + items.join('') + '</ul>';
     });
     // Ordered lists
     s = s.replace(/((?:^\d+\. .+\n?)+)/gm, function(block) {
       const items = block.trim().split('\n').map(l => '<li>' + l.replace(/^\d+\. /, '') + '</li>');
-      return '<ol class="wpc-md-ol">' + items.join('') + '</ol>';
+      return '<ol class="dqa-md-ol">' + items.join('') + '</ol>';
     });
 
     // Bold, italic, inline code
     s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
     s = s.replace(/\*(.+?)\*/g,     '<em>$1</em>');
-    s = s.replace(/`([^`]+)`/g,     '<code class="wpc-md-code">$1</code>');
+    s = s.replace(/`([^`]+)`/g,     '<code class="dqa-md-code">$1</code>');
 
     // Paragraphs: double newlines
     s = s.split(/\n{2,}/).map(function(p) {
       p = p.trim();
       if (!p) return '';
       if (/^<(h[2-4]|ul|ol|pre|div|table)/.test(p)) return p;
-      return '<p class="wpc-md-p">' + p.replace(/\n/g, '<br>') + '</p>';
+      return '<p class="dqa-md-p">' + p.replace(/\n/g, '<br>') + '</p>';
     }).join('\n');
 
     return s;
@@ -628,7 +628,7 @@
 
   function renderResult($bot, data) {
     if (data.explanation) {
-      $bot.append($('<div class="wpc-explanation">').html(mdToHtml(data.explanation)));
+      $bot.append($('<div class="dqa-explanation">').html(mdToHtml(data.explanation)));
     }
     if (data.html) {
       $bot.append($(data.html));
@@ -642,7 +642,7 @@
     if (data.tokens) meta.push('↑' + (data.tokens.in || 0) + ' ↓' + (data.tokens.out || 0) + ' tok');
     if (data.exec_ms) meta.push(data.exec_ms + 'ms');
     if (meta.length) {
-      $bot.append($('<div class="wpc-meta">').text(meta.join(' · ')));
+      $bot.append($('<div class="dqa-meta">').text(meta.join(' · ')));
     }
 
     appendActions($bot);
@@ -650,8 +650,8 @@
   }
 
   function appendSqlBlock($container, sql) {
-    const $toggle = $('<button class="wpc-sql-toggle" type="button">').text('Show SQL ▾');
-    const $code = $('<pre class="wpc-sql-code">').text(sql).hide();
+    const $toggle = $('<button class="dqa-sql-toggle" type="button">').text('Show SQL ▾');
+    const $code = $('<pre class="dqa-sql-code">').text(sql).hide();
     $toggle.on('click', function () {
       $code.toggle();
       $toggle.text($code.is(':visible') ? 'Hide SQL ▴' : 'Show SQL ▾');
@@ -662,10 +662,10 @@
   function appendActions($container) {
     const query = String($container.data('query') || '');
     if (!query) return;
-    $container.find('.wpc-actions').remove();
+    $container.find('.dqa-actions').remove();
 
-    const $actions = $('<div class="wpc-actions">');
-    const $retry = $('<button type="button" class="wpc-retry-btn">').text(cfg.i18n.retry || 'Try again');
+    const $actions = $('<div class="dqa-actions">');
+    const $retry = $('<button type="button" class="dqa-retry-btn">').text(cfg.i18n.retry || 'Try again');
     $retry.on('click', function () {
       if (isBusy) return;
       $input.val(query);
@@ -676,8 +676,8 @@
   }
 
   function appendMsg(role, html, isError) {
-    const $m = $('<div>').addClass('wpc-msg wpc-msg--' + role);
-    if (isError) $m.addClass('wpc-msg--error');
+    const $m = $('<div>').addClass('dqa-msg dqa-msg--' + role);
+    if (isError) $m.addClass('dqa-msg--error');
     if (html) $m.html(html);
     $messages.append($m);
     scrollBottom();
@@ -698,7 +698,7 @@
   function setBusy(busy) {
     isBusy = busy;
     $send.prop('disabled', busy);
-    $send.toggleClass('wpc-send-btn--busy', busy);
+    $send.toggleClass('dqa-send-btn--busy', busy);
   }
 
   function buildContext(chat) {
@@ -772,7 +772,7 @@
     currentModel = value;
     cfg.model = value;
     $modelLabel.text(label);
-    $modelDropdown.find('.wpc-model-option').each(function () {
+    $modelDropdown.find('.dqa-model-option').each(function () {
       $(this).toggleClass('is-selected', $(this).data('value') === value);
     });
     closeModelDropdown();
@@ -786,9 +786,9 @@
 
     $modelDropdown.empty();
     entries.forEach(function (entry) {
-      const $li = $('<li class="wpc-model-option">').attr('data-value', entry[0]);
+      const $li = $('<li class="dqa-model-option">').attr('data-value', entry[0]);
       $li.append($('<span>').text(entry[1]));
-      $li.append($('<svg class="wpc-model-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'));
+      $li.append($('<svg class="dqa-model-check" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>'));
       $li.on('click', function () { selectModel(entry[0], entry[1]); });
       $modelDropdown.append($li);
     });
@@ -801,7 +801,7 @@
       currentModel = selected;
       cfg.model = selected;
       $modelLabel.text(label);
-      $modelDropdown.find('.wpc-model-option').each(function () {
+      $modelDropdown.find('.dqa-model-option').each(function () {
         $(this).toggleClass('is-selected', $(this).data('value') === selected);
       });
     }
@@ -818,15 +818,15 @@
   }
 
   function getModelStorageKey() {
-    return 'wpc_model_override_' + String(cfg.providerKey || 'default');
+    return 'dqa_model_override_' + String(cfg.providerKey || 'default');
   }
 
   function getChatsStorageKey() {
-    return 'wpc_chats_' + String(cfg.providerKey || 'default');
+    return 'dqa_chats_' + String(cfg.providerKey || 'default');
   }
 
   function getActiveChatStorageKey() {
-    return 'wpc_active_chat_' + String(cfg.providerKey || 'default');
+    return 'dqa_active_chat_' + String(cfg.providerKey || 'default');
   }
 
   function getSelectedModel() {
@@ -875,7 +875,7 @@
       var chat = getActiveChat();
       if (!chat) return;
       $.post(cfg.ajaxUrl, {
-        action:   'wpc_chat_save',
+        action:   'dqa_chat_save',
         nonce:    cfg.nonce,
         provider: cfg.providerKey || '',
         chat:     JSON.stringify(chat)
@@ -885,7 +885,7 @@
 
   function dbLoadChats(callback) {
     $.post(cfg.ajaxUrl, {
-      action:   'wpc_chats_load',
+      action:   'dqa_chats_load',
       nonce:    cfg.nonce,
       provider: cfg.providerKey || ''
     }, function (resp) {
@@ -899,7 +899,7 @@
 
   function dbDeleteChat(chatId) {
     $.post(cfg.ajaxUrl, {
-      action:  'wpc_chat_delete',
+      action:  'dqa_chat_delete',
       nonce:   cfg.nonce,
       chat_id: chatId
     });

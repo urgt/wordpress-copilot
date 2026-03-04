@@ -1,9 +1,9 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
-class WPC_DB_Schema {
+class DQA_DB_Schema {
 
-	const CACHE_KEY = 'wpc_schema_v2';
+	const CACHE_KEY = 'dqa_schema_v2';
 	const CACHE_TTL = HOUR_IN_SECONDS;
 
 	/**
@@ -11,28 +11,28 @@ class WPC_DB_Schema {
 	 * Result is cached via WordPress transients (TTL configurable in settings).
 	 */
 	public static function get_schema_prompt(): string {
-		$ttl = (int) WPC_Settings::get( 'schema_cache_ttl', HOUR_IN_SECONDS );
+		$ttl = (int) DQA_Settings::get( 'schema_cache_ttl', HOUR_IN_SECONDS );
 
 		if ( $ttl > 0 ) {
 			$cached = get_transient( self::CACHE_KEY );
 			if ( false !== $cached ) {
-				WPC_Logger::log( 'Schema loaded from transient cache.' );
+				DQA_Logger::log( 'Schema loaded from transient cache.' );
 				return $cached;
 			}
 		}
 
-		WPC_Logger::log( 'Building fresh DB schema...' );
+		DQA_Logger::log( 'Building fresh DB schema...' );
 		global $wpdb;
 
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Schema introspection must use direct SHOW TABLES; cached via transient at higher level.
 		$all_tables   = $wpdb->get_col( 'SHOW TABLES' );
 		$excluded     = self::get_excluded_patterns();
-		$max_tables   = (int) WPC_Settings::get( 'max_schema_tables', 80 );
-		$anon_enabled = (bool) WPC_Settings::get( 'anonymize_enabled', false );
-		$anon_schema  = $anon_enabled && (bool) WPC_Settings::get( 'anonymize_schema', false );
+		$max_tables   = (int) DQA_Settings::get( 'max_schema_tables', 80 );
+		$anon_enabled = (bool) DQA_Settings::get( 'anonymize_enabled', false );
+		$anon_schema  = $anon_enabled && (bool) DQA_Settings::get( 'anonymize_schema', false );
 		$anon_cols    = [];
 		if ( $anon_schema ) {
-			$raw       = WPC_Settings::get( 'anonymize_columns', WPC_Settings::default_anon_columns() );
+			$raw       = DQA_Settings::get( 'anonymize_columns', DQA_Settings::default_anon_columns() );
 			$anon_cols = array_filter( array_map( 'strtolower', array_map( 'trim', explode( "\n", $raw ) ) ) );
 		}
 
@@ -163,7 +163,7 @@ class WPC_DB_Schema {
 			set_transient( self::CACHE_KEY, $result, $ttl );
 		}
 
-		WPC_Logger::log( 'Schema built: ' . strlen( $result ) . ' chars, ' . count( $tables ) . ' tables.' );
+		DQA_Logger::log( 'Schema built: ' . strlen( $result ) . ' chars, ' . count( $tables ) . ' tables.' );
 		return $result;
 	}
 
@@ -172,7 +172,7 @@ class WPC_DB_Schema {
 	}
 
 	private static function get_excluded_patterns(): array {
-		$raw = WPC_Settings::get( 'excluded_tables', '' );
+		$raw = DQA_Settings::get( 'excluded_tables', '' );
 		if ( empty( trim( $raw ) ) ) {
 			return [];
 		}

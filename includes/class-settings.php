@@ -1,9 +1,9 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
-class WPC_Settings {
+class DQA_Settings {
 
-	const OPTION_KEY = 'wpc_settings_v2';
+	const OPTION_KEY = 'dqa_settings_v2';
 
 	/* ── Getter ─────────────────────────────────────────────────── */
 	public static function get( string $key, $fallback = '' ) {
@@ -94,7 +94,7 @@ class WPC_Settings {
 		add_action( 'admin_menu', [ __CLASS__, 'add_settings_page' ] );
 		add_action( 'admin_init', [ __CLASS__, 'register_settings' ] );
 		add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_admin_assets' ] );
-		add_action( 'wp_ajax_wpc_flush_schema', [ __CLASS__, 'ajax_flush_schema' ] );
+		add_action( 'wp_ajax_dqa_flush_schema', [ __CLASS__, 'ajax_flush_schema' ] );
 	}
 
 	public static function enqueue_admin_assets( string $hook ): void {
@@ -102,16 +102,16 @@ class WPC_Settings {
 			return;
 		}
 		wp_enqueue_style(
-			'wpc-admin',
-			WPC_URL . 'assets/css/admin.css',
+			'dqa-admin',
+			DQA_URL . 'assets/css/admin.css',
 			[],
-			WPC_VERSION
+			DQA_VERSION
 		);
 	}
 
 	public static function register_settings(): void {
 		register_setting(
-			'wpc_group',
+			'dqa_group',
 			self::OPTION_KEY,
 			[
 				'sanitize_callback' => [ __CLASS__, 'sanitize' ],
@@ -159,16 +159,16 @@ class WPC_Settings {
 		$clean['debug_mode']   = ! empty( $input['debug_mode'] );
 
 		self::bust_cache();
-		WPC_DB_Schema::flush_cache();
+		DQA_DB_Schema::flush_cache();
 		return $clean;
 	}
 
 	public static function ajax_flush_schema(): void {
-		check_ajax_referer( 'wpc_admin_nonce', 'nonce' );
+		check_ajax_referer( 'dqa_admin_nonce', 'nonce' );
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'Forbidden', 'data-query-assistant' ), 403 );
 		}
-		WPC_DB_Schema::flush_cache();
+		DQA_DB_Schema::flush_cache();
 		wp_send_json_success( [ 'message' => __( 'Schema cache cleared.', 'data-query-assistant' ) ] );
 	}
 
@@ -242,7 +242,7 @@ class WPC_Settings {
 
 	/** Schema cache status with expiry and token estimate */
 	public static function get_schema_status(): array {
-		$cached_schema = get_transient( WPC_DB_Schema::CACHE_KEY );
+		$cached_schema = get_transient( DQA_DB_Schema::CACHE_KEY );
 		if ( false === $cached_schema ) {
 			return [
 				'cached'     => false,
@@ -253,7 +253,7 @@ class WPC_Settings {
 		}
 
 		global $wpdb;
-		$ttl_key = '_transient_timeout_' . WPC_DB_Schema::CACHE_KEY;
+		$ttl_key = '_transient_timeout_' . DQA_DB_Schema::CACHE_KEY;
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Reading transient timeout directly to show accurate expiry countdown.
 		$expires    = (int) $wpdb->get_var(
 			$wpdb->prepare( "SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", $ttl_key )
@@ -286,33 +286,33 @@ class WPC_Settings {
 		);
 		$schema_status   = self::get_schema_status();
 		$recommendations = self::get_recommendations();
-		$admin_nonce     = wp_create_nonce( 'wpc_admin_nonce' );
+		$admin_nonce     = wp_create_nonce( 'dqa_admin_nonce' );
 		$anon_level      = $opts['anonymize_level'] ?? 'off';
 		?>
-		<div class="wpc-admin-page">
+		<div class="dqa-admin-page">
 
-		<div class="wpc-admin-header">
-			<h1>⚡ Data Query Assistant <span>v<?php echo esc_html( WPC_VERSION ); ?></span></h1>
+		<div class="dqa-admin-header">
+			<h1>⚡ Data Query Assistant <span>v<?php echo esc_html( DQA_VERSION ); ?></span></h1>
 		</div>
 
-		<?php settings_errors( 'wpc_group' ); ?>
+		<?php settings_errors( 'dqa_group' ); ?>
 
 		<!-- Tabs -->
-		<div class="wpc-tabs">
-			<button class="wpc-tab-btn active" data-tab="provider"><?php esc_html_e( '🤖 AI Provider', 'data-query-assistant' ); ?></button>
-			<button class="wpc-tab-btn" data-tab="privacy"><?php esc_html_e( '🔒 Privacy', 'data-query-assistant' ); ?></button>
-			<button class="wpc-tab-btn" data-tab="performance"><?php esc_html_e( '⚡ Performance', 'data-query-assistant' ); ?></button>
-			<button class="wpc-tab-btn" data-tab="access"><?php esc_html_e( '👥 Access', 'data-query-assistant' ); ?></button>
-			<button class="wpc-tab-btn" data-tab="advanced"><?php esc_html_e( '⚙️ Advanced', 'data-query-assistant' ); ?></button>
+		<div class="dqa-tabs">
+			<button class="dqa-tab-btn active" data-tab="provider"><?php esc_html_e( '🤖 AI Provider', 'data-query-assistant' ); ?></button>
+			<button class="dqa-tab-btn" data-tab="privacy"><?php esc_html_e( '🔒 Privacy', 'data-query-assistant' ); ?></button>
+			<button class="dqa-tab-btn" data-tab="performance"><?php esc_html_e( '⚡ Performance', 'data-query-assistant' ); ?></button>
+			<button class="dqa-tab-btn" data-tab="access"><?php esc_html_e( '👥 Access', 'data-query-assistant' ); ?></button>
+			<button class="dqa-tab-btn" data-tab="advanced"><?php esc_html_e( '⚙️ Advanced', 'data-query-assistant' ); ?></button>
 		</div>
 
-		<form method="post" action="options.php" id="wpc-settings-form">
-			<?php settings_fields( 'wpc_group' ); ?>
+		<form method="post" action="options.php" id="dqa-settings-form">
+			<?php settings_fields( 'dqa_group' ); ?>
 
 			<!-- ── Tab: AI Provider ─────────────────────────────── -->
-			<div class="wpc-tab-panel active" data-panel="provider">
+			<div class="dqa-tab-panel active" data-panel="provider">
 
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Provider', 'data-query-assistant' ); ?></h3>
 					<?php
 					foreach ( $providers as $key => $info ) :
@@ -322,7 +322,7 @@ class WPC_Settings {
 							'google'    => '🔵',
 						];
 						?>
-					<label class="wpc-provider-card">
+					<label class="dqa-provider-card">
 						<input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[provider]"
 								value="<?php echo esc_attr( $key ); ?>"
 								<?php checked( $cur_prov, $key ); ?>
@@ -344,12 +344,12 @@ class WPC_Settings {
 					<?php endforeach; ?>
 				</div>
 
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Model', 'data-query-assistant' ); ?></h3>
 					<?php foreach ( $providers as $key => $info ) : ?>
-					<div class="wpc-model-group" data-provider="<?php echo esc_attr( $key ); ?>"
+					<div class="dqa-model-group" data-provider="<?php echo esc_attr( $key ); ?>"
 						style="display:<?php echo $cur_prov === $key ? 'block' : 'none'; ?>">
-						<div class="wpc-field">
+						<div class="dqa-field">
 							<label><?php esc_html_e( 'Active model', 'data-query-assistant' ); ?></label>
 							<div>
 								<select name="<?php echo esc_attr( self::OPTION_KEY ); ?>[model]">
@@ -360,23 +360,23 @@ class WPC_Settings {
 										</option>
 									<?php endforeach; ?>
 								</select>
-								<p class="wpc-desc"><?php esc_html_e( 'Default model for the chat. Can be overridden per-session in the chat UI.', 'data-query-assistant' ); ?></p>
+								<p class="dqa-desc"><?php esc_html_e( 'Default model for the chat. Can be overridden per-session in the chat UI.', 'data-query-assistant' ); ?></p>
 							</div>
 						</div>
 					</div>
 					<?php endforeach; ?>
 				</div>
 
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'API Key', 'data-query-assistant' ); ?></h3>
-					<div class="wpc-field">
+					<div class="dqa-field">
 						<label><?php esc_html_e( 'Secret key', 'data-query-assistant' ); ?></label>
 						<div>
 							<input type="password"
 									name="<?php echo esc_attr( self::OPTION_KEY ); ?>[api_key]"
 									value="<?php echo esc_attr( $opts['api_key'] ?? '' ); ?>"
 									class="regular-text" autocomplete="new-password" />
-							<p class="wpc-desc" id="wpc-api-key-hint"></p>
+							<p class="dqa-desc" id="dqa-api-key-hint"></p>
 						</div>
 					</div>
 				</div>
@@ -385,20 +385,20 @@ class WPC_Settings {
 			</div>
 
 			<!-- ── Tab: Privacy ─────────────────────────────────── -->
-			<div class="wpc-tab-panel" data-panel="privacy">
+			<div class="dqa-tab-panel" data-panel="privacy">
 
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Data Sharing', 'data-query-assistant' ); ?></h3>
-					<div class="wpc-privacy-note">
+					<div class="dqa-privacy-note">
 						<strong><?php esc_html_e( 'Sent on every request:', 'data-query-assistant' ); ?></strong> <?php esc_html_e( 'database structure (table names, column names, types), your question in natural language, and the generated SQL query.', 'data-query-assistant' ); ?><br>
 						<strong><?php esc_html_e( 'Sent for analysis:', 'data-query-assistant' ); ?></strong> <?php esc_html_e( 'query result rows are forwarded to the AI provider so it can summarize the answer. Without protection enabled, this may include personal data (emails, names, addresses, phone numbers).', 'data-query-assistant' ); ?>
 					</div>
 				</div>
 
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Protection Level', 'data-query-assistant' ); ?></h3>
-					<div class="wpc-radio-group">
-						<label class="wpc-radio-opt">
+					<div class="dqa-radio-group">
+						<label class="dqa-radio-opt">
 							<input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"
 									value="off" <?php checked( $anon_level, 'off' ); ?>>
 							<div class="opt-body">
@@ -406,7 +406,7 @@ class WPC_Settings {
 								<div class="opt-desc"><?php esc_html_e( 'No data masking. All column values including personal data are visible in results and sent to the AI provider for analysis.', 'data-query-assistant' ); ?></div>
 							</div>
 						</label>
-						<label class="wpc-radio-opt">
+						<label class="dqa-radio-opt">
 							<input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"
 									value="results" <?php checked( $anon_level, 'results' ); ?>>
 							<div class="opt-body">
@@ -414,33 +414,33 @@ class WPC_Settings {
 								<div class="opt-desc"><?php echo wp_kses( __( 'Protected column values are replaced with <code>[REDACTED]</code> in query results and in data sent to AI for analysis. The database schema (table and column names) is still fully visible to the AI.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></div>
 							</div>
 						</label>
-						<label class="wpc-radio-opt">
+						<label class="dqa-radio-opt">
 							<input type="radio" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"
 									value="full" <?php checked( $anon_level, 'full' ); ?>>
 							<div class="opt-body">
 								<div class="opt-title"><?php esc_html_e( 'Full protection', 'data-query-assistant' ); ?></div>
 								<div class="opt-desc"><?php esc_html_e( 'Values are masked in results, and protected column names are completely removed from the schema sent to AI. The AI cannot reference or query these columns at all.', 'data-query-assistant' ); ?></div>
-								<span class="wpc-opt-badge success"><?php esc_html_e( 'Recommended for production', 'data-query-assistant' ); ?></span>
+								<span class="dqa-opt-badge success"><?php esc_html_e( 'Recommended for production', 'data-query-assistant' ); ?></span>
 							</div>
 						</label>
 					</div>
 				</div>
 
-				<div class="wpc-card" id="wpc-anon-cols-card" style="<?php echo 'off' === $anon_level ? 'opacity:.45;pointer-events:none' : ''; ?>">
+				<div class="dqa-card" id="dqa-anon-cols-card" style="<?php echo 'off' === $anon_level ? 'opacity:.45;pointer-events:none' : ''; ?>">
 					<h3><?php esc_html_e( 'Protected Columns', 'data-query-assistant' ); ?></h3>
-					<div class="wpc-field">
+					<div class="dqa-field">
 						<label><?php esc_html_e( 'Column names', 'data-query-assistant' ); ?></label>
 						<div>
 							<textarea name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_columns]"
 										rows="8"><?php echo esc_textarea( $opts['anonymize_columns'] ?? self::default_anon_columns() ); ?></textarea>
-							<p class="wpc-desc"><?php echo wp_kses( __( 'One column name per line. Case-insensitive exact match. Values in matching columns are replaced with <code>[REDACTED]</code>.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></p>
+							<p class="dqa-desc"><?php echo wp_kses( __( 'One column name per line. Case-insensitive exact match. Values in matching columns are replaced with <code>[REDACTED]</code>.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></p>
 						</div>
 					</div>
-					<div class="wpc-preset-bar">
+					<div class="dqa-preset-bar">
 						<span class="p-label"><?php esc_html_e( 'Quick presets:', 'data-query-assistant' ); ?></span>
-						<button type="button" class="wpc-inline-btn" data-preset="gdpr"><?php esc_html_e( 'GDPR basics', 'data-query-assistant' ); ?></button>
-						<button type="button" class="wpc-inline-btn" data-preset="woo"><?php esc_html_e( 'WooCommerce billing', 'data-query-assistant' ); ?></button>
-						<button type="button" class="wpc-inline-btn" data-preset="users"><?php esc_html_e( 'WP user fields', 'data-query-assistant' ); ?></button>
+						<button type="button" class="dqa-inline-btn" data-preset="gdpr"><?php esc_html_e( 'GDPR basics', 'data-query-assistant' ); ?></button>
+						<button type="button" class="dqa-inline-btn" data-preset="woo"><?php esc_html_e( 'WooCommerce billing', 'data-query-assistant' ); ?></button>
+						<button type="button" class="dqa-inline-btn" data-preset="users"><?php esc_html_e( 'WP user fields', 'data-query-assistant' ); ?></button>
 					</div>
 				</div>
 
@@ -448,7 +448,7 @@ class WPC_Settings {
 			</div>
 
 			<!-- ── Tab: Performance ─────────────────────────────── -->
-			<div class="wpc-tab-panel" data-panel="performance">
+			<div class="dqa-tab-panel" data-panel="performance">
 
 				<?php
 				$is_large  = $table_count > 60 || $db_size_mb > 500;
@@ -459,7 +459,7 @@ class WPC_Settings {
 				?>
 
 				<!-- Compact DB info bar -->
-				<div class="wpc-db-bar">
+				<div class="dqa-db-bar">
 					<div class="bar-item">
 						<span class="bar-val <?php echo $table_count > 60 ? 'yellow' : ''; ?>"><?php echo absint( $table_count ); ?></span>
 						<span class="bar-lbl"><?php esc_html_e( 'Tables', 'data-query-assistant' ); ?></span>
@@ -483,10 +483,10 @@ class WPC_Settings {
 				</div>
 
 				<!-- Schema Cache -->
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Schema Cache', 'data-query-assistant' ); ?></h3>
 					<?php if ( $cache['tokens'] > 4000 ) : ?>
-					<div class="wpc-token-note">
+					<div class="dqa-token-note">
 						<?php
 						echo wp_kses(
 							sprintf(
@@ -499,7 +499,7 @@ class WPC_Settings {
 						?>
 					</div>
 					<?php endif; ?>
-					<div class="wpc-field">
+					<div class="dqa-field">
 						<label><?php esc_html_e( 'Cache duration', 'data-query-assistant' ); ?></label>
 						<div>
 							<select name="<?php echo esc_attr( self::OPTION_KEY ); ?>[schema_cache_ttl]">
@@ -509,30 +509,30 @@ class WPC_Settings {
 								<option value="21600" <?php selected( ( $opts['schema_cache_ttl'] ?? '3600' ), '21600' ); ?>><?php esc_html_e( '6 hours', 'data-query-assistant' ); ?></option>
 								<option value="86400" <?php selected( ( $opts['schema_cache_ttl'] ?? '3600' ), '86400' ); ?>><?php esc_html_e( '24 hours', 'data-query-assistant' ); ?></option>
 							</select>
-							<p class="wpc-desc"><?php esc_html_e( 'How long to keep the schema in cache. Longer = fewer rebuilds, but DB structure changes won\'t be detected until cache expires.', 'data-query-assistant' ); ?></p>
+							<p class="dqa-desc"><?php esc_html_e( 'How long to keep the schema in cache. Longer = fewer rebuilds, but DB structure changes won\'t be detected until cache expires.', 'data-query-assistant' ); ?></p>
 						</div>
 					</div>
-					<div class="wpc-field">
+					<div class="dqa-field">
 						<label><?php esc_html_e( 'Max tables in schema', 'data-query-assistant' ); ?></label>
 						<div>
 							<input type="number" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[max_schema_tables]"
 									value="<?php echo esc_attr( $opts['max_schema_tables'] ?? 80 ); ?>"
 									min="5" max="500" class="small-text" />
-							<p class="wpc-desc"><?php esc_html_e( 'WordPress core tables are always prioritized. Remaining slots filled alphabetically.', 'data-query-assistant' ); ?></p>
+							<p class="dqa-desc"><?php esc_html_e( 'WordPress core tables are always prioritized. Remaining slots filled alphabetically.', 'data-query-assistant' ); ?></p>
 						</div>
 					</div>
-					<hr class="wpc-section-divider">
+					<hr class="dqa-section-divider">
 					<div style="display:flex;align-items:center;gap:10px;">
-						<button type="button" class="wpc-inline-btn" id="wpc-flush-schema"><?php esc_html_e( 'Flush cache', 'data-query-assistant' ); ?></button>
+						<button type="button" class="dqa-inline-btn" id="dqa-flush-schema"><?php esc_html_e( 'Flush cache', 'data-query-assistant' ); ?></button>
 						<span style="font-size:12px;color:#757575;"><?php esc_html_e( 'Force a schema rebuild on next query.', 'data-query-assistant' ); ?></span>
 					</div>
 				</div>
 
 				<!-- Table Exclusions -->
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Table Exclusions', 'data-query-assistant' ); ?>
 						<?php if ( $is_large ) : ?>
-						<span class="wpc-badge warn"><?php esc_html_e( 'Large database', 'data-query-assistant' ); ?></span>
+						<span class="dqa-badge warn"><?php esc_html_e( 'Large database', 'data-query-assistant' ); ?></span>
 						<?php endif; ?>
 					</h3>
 
@@ -554,61 +554,61 @@ class WPC_Settings {
 						);
 						?>
 					</p>
-					<div class="wpc-rec-list" id="wpc-rec-list">
+					<div class="dqa-rec-list" id="dqa-rec-list">
 						<?php foreach ( $recommendations as $rec ) : ?>
-						<div class="wpc-rec-item" data-pattern="<?php echo esc_attr( $rec['pattern'] ); ?>">
-							<div class="wpc-rec-info">
+						<div class="dqa-rec-item" data-pattern="<?php echo esc_attr( $rec['pattern'] ); ?>">
+							<div class="dqa-rec-info">
 								<strong><?php echo esc_html( $rec['label'] ); ?></strong>
 								<span><?php echo esc_html( $rec['desc'] ); ?></span>
 							</div>
-							<code class="wpc-rec-pattern"><?php echo esc_html( $rec['pattern'] ); ?></code>
-							<span class="wpc-rec-count">
+							<code class="dqa-rec-pattern"><?php echo esc_html( $rec['pattern'] ); ?></code>
+							<span class="dqa-rec-count">
 							<?php
 								/* translators: %d: number of tables matched */
 								echo esc_html( sprintf( _n( '%d table', '%d tables', $rec['count'], 'data-query-assistant' ), $rec['count'] ) );
 							?>
 							</span>
-							<button type="button" class="wpc-inline-btn wpc-add-rec"><?php esc_html_e( 'Exclude', 'data-query-assistant' ); ?></button>
+							<button type="button" class="dqa-inline-btn dqa-add-rec"><?php esc_html_e( 'Exclude', 'data-query-assistant' ); ?></button>
 						</div>
 						<?php endforeach; ?>
 					</div>
 					<div style="margin-bottom:16px;">
-						<button type="button" class="wpc-inline-btn" id="wpc-add-all-recs"><?php esc_html_e( 'Exclude all detected', 'data-query-assistant' ); ?></button>
+						<button type="button" class="dqa-inline-btn" id="dqa-add-all-recs"><?php esc_html_e( 'Exclude all detected', 'data-query-assistant' ); ?></button>
 					</div>
-					<hr class="wpc-section-divider">
+					<hr class="dqa-section-divider">
 					<?php else : ?>
 					<p style="font-size:12px;color:#166534;margin:0 0 14px;"><?php esc_html_e( 'No unnecessary plugin tables detected — your schema is clean.', 'data-query-assistant' ); ?></p>
 					<?php endif; ?>
 
-					<div class="wpc-field">
+					<div class="dqa-field">
 						<label><?php esc_html_e( 'Exclusion patterns', 'data-query-assistant' ); ?></label>
 						<div>
 							<textarea name="<?php echo esc_attr( self::OPTION_KEY ); ?>[excluded_tables]"
-										rows="6" id="wpc-excluded-tables"><?php echo esc_textarea( $opts['excluded_tables'] ?? '' ); ?></textarea>
-							<p class="wpc-desc"><?php echo wp_kses( __( 'One pattern per line. Use <code>*</code> as wildcard (e.g. <code>wp_yoast_*</code>). Matched tables are completely hidden from AI.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></p>
+										rows="6" id="dqa-excluded-tables"><?php echo esc_textarea( $opts['excluded_tables'] ?? '' ); ?></textarea>
+							<p class="dqa-desc"><?php echo wp_kses( __( 'One pattern per line. Use <code>*</code> as wildcard (e.g. <code>wp_yoast_*</code>). Matched tables are completely hidden from AI.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></p>
 						</div>
 					</div>
 				</div>
 
 				<!-- Query Limits -->
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Query Limits', 'data-query-assistant' ); ?></h3>
-					<div class="wpc-field">
+					<div class="dqa-field">
 						<label><?php esc_html_e( 'Execution timeout', 'data-query-assistant' ); ?></label>
 						<div>
 							<input type="number" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[query_timeout]"
 									value="<?php echo esc_attr( $opts['query_timeout'] ?? 15 ); ?>"
 									min="0" max="120" class="small-text" /> <?php esc_html_e( 'seconds', 'data-query-assistant' ); ?>
-							<p class="wpc-desc"><?php echo wp_kses( __( 'MySQL <code>MAX_EXECUTION_TIME</code> per query. Set to 0 for server default.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></p>
+							<p class="dqa-desc"><?php echo wp_kses( __( 'MySQL <code>MAX_EXECUTION_TIME</code> per query. Set to 0 for server default.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></p>
 						</div>
 					</div>
-					<div class="wpc-field">
+					<div class="dqa-field">
 						<label><?php esc_html_e( 'Maximum result rows', 'data-query-assistant' ); ?></label>
 						<div>
 							<input type="number" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[max_rows]"
 									value="<?php echo esc_attr( $opts['max_rows'] ?? 100 ); ?>"
 									min="1" max="5000" class="small-text" /> <?php esc_html_e( 'rows', 'data-query-assistant' ); ?>
-							<p class="wpc-desc"><?php echo wp_kses( __( 'AI is instructed to add <code>LIMIT</code> to all queries. Hard safety cap: 1–5000.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></p>
+							<p class="dqa-desc"><?php echo wp_kses( __( 'AI is instructed to add <code>LIMIT</code> to all queries. Hard safety cap: 1–5000.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></p>
 						</div>
 					</div>
 				</div>
@@ -617,14 +617,14 @@ class WPC_Settings {
 			</div>
 
 			<!-- ── Tab: Access ───────────────────────────────────── -->
-			<div class="wpc-tab-panel" data-panel="access">
+			<div class="dqa-tab-panel" data-panel="access">
 
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Allowed Roles', 'data-query-assistant' ); ?></h3>
 					<p style="font-size:13px;color:#555;margin:0 0 16px;"><?php esc_html_e( 'Only users with these roles can access the Copilot chat widget in the admin.', 'data-query-assistant' ); ?></p>
-					<div class="wpc-roles-grid">
+					<div class="dqa-roles-grid">
 						<?php foreach ( $roles as $role_key => $role_data ) : ?>
-						<label class="wpc-role-item">
+						<label class="dqa-role-item">
 							<input type="checkbox"
 									name="<?php echo esc_attr( self::OPTION_KEY ); ?>[allowed_roles][]"
 									value="<?php echo esc_attr( $role_key ); ?>"
@@ -639,56 +639,56 @@ class WPC_Settings {
 			</div>
 
 			<!-- ── Tab: Advanced ─────────────────────────────────── -->
-			<div class="wpc-tab-panel" data-panel="advanced">
+			<div class="dqa-tab-panel" data-panel="advanced">
 
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Response', 'data-query-assistant' ); ?></h3>
-					<div class="wpc-toggle-row">
+					<div class="dqa-toggle-row">
 						<input type="checkbox" id="opt_streaming" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[streaming]" value="1"
 								<?php checked( ! empty( $opts['streaming'] ) ); ?>>
 						<div>
 							<label for="opt_streaming"><?php esc_html_e( '⚡ Enable streaming', 'data-query-assistant' ); ?></label>
-							<p class="wpc-desc"><?php esc_html_e( 'Real-time token-by-token response. Disable if your server doesn\'t support long-running requests.', 'data-query-assistant' ); ?></p>
+							<p class="dqa-desc"><?php esc_html_e( 'Real-time token-by-token response. Disable if your server doesn\'t support long-running requests.', 'data-query-assistant' ); ?></p>
 						</div>
 					</div>
-					<div class="wpc-toggle-row">
+					<div class="dqa-toggle-row">
 						<input type="checkbox" id="opt_show_sql" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[show_sql]" value="1"
 								<?php checked( ! empty( $opts['show_sql'] ) ); ?>>
 						<div>
 							<label for="opt_show_sql"><?php esc_html_e( '🔍 Show generated SQL', 'data-query-assistant' ); ?></label>
-							<p class="wpc-desc"><?php esc_html_e( 'Displays the SQL query generated by AI. Useful for transparency and debugging.', 'data-query-assistant' ); ?></p>
+							<p class="dqa-desc"><?php esc_html_e( 'Displays the SQL query generated by AI. Useful for transparency and debugging.', 'data-query-assistant' ); ?></p>
 						</div>
 					</div>
 				</div>
 
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Input', 'data-query-assistant' ); ?></h3>
-					<div class="wpc-toggle-row">
+					<div class="dqa-toggle-row">
 						<input type="checkbox" id="opt_voice" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[enable_voice]" value="1"
 								<?php checked( ! empty( $opts['enable_voice'] ) ); ?>>
 						<div>
 							<label for="opt_voice"><?php esc_html_e( '🎙️ Enable voice input', 'data-query-assistant' ); ?></label>
-							<p class="wpc-desc"><?php esc_html_e( 'Web Speech API — Chrome/Edge only. Allows dictating questions.', 'data-query-assistant' ); ?></p>
+							<p class="dqa-desc"><?php esc_html_e( 'Web Speech API — Chrome/Edge only. Allows dictating questions.', 'data-query-assistant' ); ?></p>
 						</div>
 					</div>
 				</div>
 
-				<div class="wpc-card">
+				<div class="dqa-card">
 					<h3><?php esc_html_e( 'Logging & Debug', 'data-query-assistant' ); ?></h3>
-					<div class="wpc-toggle-row">
+					<div class="dqa-toggle-row">
 						<input type="checkbox" id="opt_log" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[log_queries]" value="1"
 								<?php checked( ! empty( $opts['log_queries'] ) ); ?>>
 						<div>
 							<label for="opt_log"><?php esc_html_e( '📋 Log queries to database', 'data-query-assistant' ); ?></label>
-							<p class="wpc-desc"><?php echo wp_kses( __( 'Stores every query, generated SQL, token usage and status in the <code>wp_copilot_logs</code> table.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></p>
+							<p class="dqa-desc"><?php echo wp_kses( __( 'Stores every query, generated SQL, token usage and status in the <code>wp_dqa_logs</code> table.', 'data-query-assistant' ), [ 'code' => [] ] ); ?></p>
 						</div>
 					</div>
-					<div class="wpc-toggle-row">
+					<div class="dqa-toggle-row">
 						<input type="checkbox" id="opt_debug" name="<?php echo esc_attr( self::OPTION_KEY ); ?>[debug_mode]" value="1"
 								<?php checked( ! empty( $opts['debug_mode'] ) ); ?>>
 						<div>
 							<label for="opt_debug"><?php esc_html_e( '🐛 Debug mode', 'data-query-assistant' ); ?></label>
-							<p class="wpc-desc"><?php esc_html_e( 'Verbose logging to PHP error log. Disable in production.', 'data-query-assistant' ); ?></p>
+							<p class="dqa-desc"><?php esc_html_e( 'Verbose logging to PHP error log. Disable in production.', 'data-query-assistant' ); ?></p>
 						</div>
 					</div>
 				</div>
@@ -701,15 +701,15 @@ class WPC_Settings {
 		<!-- Query Log -->
 		<?php self::render_query_log( $opts ); ?>
 
-		</div><!-- .wpc-admin-page -->
+		</div><!-- .dqa-admin-page -->
 
 		<script>
 		jQuery(function($){
 			// Tabs
-			$('.wpc-tab-btn').on('click', function(){
+			$('.dqa-tab-btn').on('click', function(){
 				var tab = $(this).data('tab');
-				$('.wpc-tab-btn').removeClass('active');
-				$('.wpc-tab-panel').removeClass('active');
+				$('.dqa-tab-btn').removeClass('active');
+				$('.dqa-tab-panel').removeClass('active');
 				$(this).addClass('active');
 				$('[data-panel="'+tab+'"]').addClass('active');
 			});
@@ -722,9 +722,9 @@ class WPC_Settings {
 			};
 			function updateProvider() {
 				var prov = $('input[name="<?php echo esc_attr( self::OPTION_KEY ); ?>[provider]"]:checked').val();
-				$('.wpc-model-group').hide();
-				$('.wpc-model-group[data-provider="'+prov+'"]').show();
-				$('#wpc-api-key-hint').html(hints[prov] || '');
+				$('.dqa-model-group').hide();
+				$('.dqa-model-group[data-provider="'+prov+'"]').show();
+				$('#dqa-api-key-hint').html(hints[prov] || '');
 			}
 			$('input[name="<?php echo esc_attr( self::OPTION_KEY ); ?>[provider]"]').on('change', updateProvider);
 			updateProvider();
@@ -732,7 +732,7 @@ class WPC_Settings {
 			// Anonymizer level toggle
 			$('input[name="<?php echo esc_attr( self::OPTION_KEY ); ?>[anonymize_level]"]').on('change', function(){
 				var off = this.value === 'off';
-				$('#wpc-anon-cols-card').css({ opacity: off ? .45 : 1, pointerEvents: off ? 'none' : '' });
+				$('#dqa-anon-cols-card').css({ opacity: off ? .45 : 1, pointerEvents: off ? 'none' : '' });
 			});
 
 			// Column presets
@@ -751,10 +751,10 @@ class WPC_Settings {
 			});
 
 			// Flush schema cache
-			$('#wpc-flush-schema').on('click', function(){
+			$('#dqa-flush-schema').on('click', function(){
 				var $btn = $(this);
 				$btn.text('Flushing…').prop('disabled', true);
-				$.post(ajaxurl, { action: 'wpc_flush_schema', nonce: '<?php echo esc_attr( $admin_nonce ); ?>' }, function(){
+				$.post(ajaxurl, { action: 'dqa_flush_schema', nonce: '<?php echo esc_attr( $admin_nonce ); ?>' }, function(){
 					$btn.addClass('success').text('✓ Done').prop('disabled', false);
 					setTimeout(function(){ $btn.removeClass('success').text('Flush cache'); }, 2500);
 				});
@@ -762,20 +762,20 @@ class WPC_Settings {
 
 			// Add recommendation to exclusions
 			function addPatternToExclusions(pattern) {
-				var $ta = $('#wpc-excluded-tables');
+				var $ta = $('#dqa-excluded-tables');
 				var cur = $ta.val().trim();
 				var lines = cur.split('\n').map(function(s){ return s.trim(); });
 				if (lines.indexOf(pattern) === -1) {
 					$ta.val( (cur ? cur + '\n' : '') + pattern );
 				}
 			}
-			$('.wpc-add-rec').on('click', function(){
-				var $item = $(this).closest('.wpc-rec-item');
+			$('.dqa-add-rec').on('click', function(){
+				var $item = $(this).closest('.dqa-rec-item');
 				addPatternToExclusions($item.data('pattern'));
 				$item.css({ opacity: .4, pointerEvents: 'none' }).find('button').text('✓ Added');
 			});
-			$('#wpc-add-all-recs').on('click', function(){
-				$('#wpc-rec-list .wpc-rec-item').each(function(){
+			$('#dqa-add-all-recs').on('click', function(){
+				$('#dqa-rec-list .dqa-rec-item').each(function(){
 					addPatternToExclusions($(this).data('pattern'));
 					$(this).css({ opacity: .4, pointerEvents: 'none' }).find('button').text('✓ Added');
 				});
@@ -791,7 +791,7 @@ class WPC_Settings {
 			return;
 		}
 		global $wpdb;
-		$table = $wpdb->prefix . 'copilot_logs';
+		$table = $wpdb->prefix . 'dqa_logs';
         // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Table existence check for log display; not cacheable.
 		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $table ) ) !== $table ) {
 			return;
@@ -808,7 +808,7 @@ class WPC_Settings {
 			return;
 		}
 		?>
-		<div class="wpc-card" style="margin-top:24px;">
+		<div class="dqa-card" style="margin-top:24px;">
 			<h3 style="margin:0 0 16px;"><?php esc_html_e( '📋 Query Log', 'data-query-assistant' ); ?> <span style="font-size:12px;color:#999;font-weight:400"><?php esc_html_e( '(last 50)', 'data-query-assistant' ); ?></span></h3>
 			<table class="widefat striped" style="font-size:12px;">
 				<thead>

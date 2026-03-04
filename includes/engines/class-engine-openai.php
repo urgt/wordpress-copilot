@@ -1,7 +1,7 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
-class WPC_Engine_OpenAI extends WPC_Engine_Core {
+class DQA_Engine_OpenAI extends DQA_Engine_Core {
 
 	const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
@@ -37,7 +37,7 @@ class WPC_Engine_OpenAI extends WPC_Engine_Core {
 			$body['stream_options'] = [ 'include_usage' => true ];
 		}
 
-		WPC_Logger::log( "OpenAI request: model={$this->model}, streaming=" . ( $is_streaming ? 'yes' : 'no' ) );
+		DQA_Logger::log( "OpenAI request: model={$this->model}, streaming=" . ( $is_streaming ? 'yes' : 'no' ) );
 
 		$result = $this->post( self::ENDPOINT, $headers, $body, $on_chunk );
 

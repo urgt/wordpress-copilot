@@ -9,7 +9,7 @@ defined( 'ABSPATH' ) || exit;
  *  2. CURLOPT_WRITEFUNCTION intercepts each data chunk
  *  3. Each chunk is parsed and streamed to the browser via SSE (echo + flush)
  */
-abstract class WPC_Engine_Core {
+abstract class DQA_Engine_Core {
 
 	protected string $api_key = '';
 	protected string $model   = '';
@@ -128,7 +128,7 @@ abstract class WPC_Engine_Core {
 
 		$options = [
 			'method'    => 'POST',
-			'timeout'   => WPC_TIMEOUT,
+			'timeout'   => DQA_TIMEOUT,
 			'sslverify' => true,
 			'headers'   => $headers,
 			'body'      => $encoded_body,
@@ -227,13 +227,13 @@ abstract class WPC_Engine_Core {
 						'explanation' => '(response was truncated — partial SQL recovered)',
 					];
 				} else {
-					WPC_Logger::warn( 'Truncated SQL ends mid-keyword, discarding: ' . mb_strimwidth( $partial_sql, 0, 100 ) );
+					DQA_Logger::warn( 'Truncated SQL ends mid-keyword, discarding: ' . mb_strimwidth( $partial_sql, 0, 100 ) );
 				}
 			}
 		}
 
 		if ( ! is_array( $parsed ) || ! isset( $parsed['sql'] ) ) {
-			WPC_Logger::error( 'AI did not return valid JSON. Raw: ' . mb_strimwidth( $text, 0, 300 ) );
+			DQA_Logger::error( 'AI did not return valid JSON. Raw: ' . mb_strimwidth( $text, 0, 300 ) );
 			return new WP_Error( 'parse_error', __( 'AI response could not be parsed.', 'data-query-assistant' ) . ' Raw: ' . mb_strimwidth( $text, 0, 200 ) );
 		}
 

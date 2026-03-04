@@ -1,7 +1,7 @@
 <?php
 defined( 'ABSPATH' ) || exit;
 
-class WPC_Engine_Anthropic extends WPC_Engine_Core {
+class DQA_Engine_Anthropic extends DQA_Engine_Core {
 
 	const ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
@@ -39,7 +39,7 @@ class WPC_Engine_Anthropic extends WPC_Engine_Core {
 			],
 		];
 
-		WPC_Logger::log( "Anthropic request: model={$this->model}, streaming=" . ( $is_streaming ? 'yes' : 'no' ) );
+		DQA_Logger::log( "Anthropic request: model={$this->model}, streaming=" . ( $is_streaming ? 'yes' : 'no' ) );
 
 		$result = $this->post( self::ENDPOINT, $headers, $body, $on_chunk );
 

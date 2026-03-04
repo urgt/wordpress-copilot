@@ -3,11 +3,11 @@ defined( 'ABSPATH' ) || exit;
 
 /**
  * DB-backed chat storage.
- * Table: wp_copilot_chats
+ * Table: wp_dqa_chats
  */
-class WPC_Chat_Storage {
+class DQA_Chat_Storage {
 
-	const TABLE_SUFFIX = 'copilot_chats';
+	const TABLE_SUFFIX = 'dqa_chats';
 	const MSG_LIMIT    = 80;
 	const CHAT_LIMIT   = 20;
 
@@ -106,7 +106,7 @@ class WPC_Chat_Storage {
 		);
 		$messages_json = wp_json_encode( $messages );
 		if ( false === $messages_json ) {
-			WPC_Logger::warn( 'Failed to encode chat messages for DB storage.' );
+			DQA_Logger::warn( 'Failed to encode chat messages for DB storage.' );
 			return false;
 		}
 
@@ -173,14 +173,14 @@ class WPC_Chat_Storage {
 	/* ── AJAX handlers ──────────────────────────────────────────── */
 
 	public static function register_ajax(): void {
-		add_action( 'wp_ajax_wpc_chats_load', [ __CLASS__, 'ajax_load' ] );
-		add_action( 'wp_ajax_wpc_chat_save', [ __CLASS__, 'ajax_save' ] );
-		add_action( 'wp_ajax_wpc_chat_delete', [ __CLASS__, 'ajax_delete' ] );
+		add_action( 'wp_ajax_dqa_chats_load', [ __CLASS__, 'ajax_load' ] );
+		add_action( 'wp_ajax_dqa_chat_save', [ __CLASS__, 'ajax_save' ] );
+		add_action( 'wp_ajax_dqa_chat_delete', [ __CLASS__, 'ajax_delete' ] );
 	}
 
 	public static function ajax_load(): void {
 		self::verify_nonce(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		if ( ! WPC_Chat_Widget::current_user_allowed() ) {
+		if ( ! DQA_Chat_Widget::current_user_allowed() ) {
 			wp_send_json_error( __( 'Access denied.', 'data-query-assistant' ), 403 );
 		}
 		$user_id  = get_current_user_id();
@@ -190,7 +190,7 @@ class WPC_Chat_Storage {
 
 	public static function ajax_save(): void {
 		self::verify_nonce(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		if ( ! WPC_Chat_Widget::current_user_allowed() ) {
+		if ( ! DQA_Chat_Widget::current_user_allowed() ) {
 			wp_send_json_error( __( 'Access denied.', 'data-query-assistant' ), 403 );
 		}
 		$user_id  = get_current_user_id();
@@ -213,7 +213,7 @@ class WPC_Chat_Storage {
 
 	public static function ajax_delete(): void {
 		self::verify_nonce(); // phpcs:ignore WordPress.Security.NonceVerification.Missing
-		if ( ! WPC_Chat_Widget::current_user_allowed() ) {
+		if ( ! DQA_Chat_Widget::current_user_allowed() ) {
 			wp_send_json_error( __( 'Access denied.', 'data-query-assistant' ), 403 );
 		}
 		$user_id = get_current_user_id();
@@ -226,7 +226,7 @@ class WPC_Chat_Storage {
 	}
 
 	private static function verify_nonce(): void {
-		if ( ! check_ajax_referer( 'wpc_nonce', 'nonce', false ) ) {
+		if ( ! check_ajax_referer( 'dqa_nonce', 'nonce', false ) ) {
 			wp_send_json_error( __( 'Invalid nonce', 'data-query-assistant' ), 403 );
 		}
 	}
